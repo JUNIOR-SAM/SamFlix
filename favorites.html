@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SamEats — Favorites</title>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen text-gray-800">
+<script>
+if (!localStorage.getItem('loggedInUser')) {
+window.location.href = 'login.html';
+}
+</script>
+
+
+<header class="bg-green-600 text-white py-4 shadow-md">
+<div class="max-w-5xl mx-auto flex items-center justify-between px-4">
+<div class="flex items-center gap-3">
+<h1 class="text-2xl font-bold">SamEats</h1>
+</div>
+<nav class="flex items-center gap-3">
+<a href="dashboard.html">Home</a>
+<a href="favorites.html">Favorites</a>
+<a href="about.html">About</a>
+<button id="logoutBtn2" class="bg-red-500 px-3 py-1 rounded-md text-white text-sm">Logout</button>
+</nav>
+</div>
+</header>
+
+
+<main class="max-w-5xl mx-auto p-4">
+<h2 class="text-xl font-semibold mb-4">Your Favorites</h2>
+<div id="favoritesContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+</main>
+
+
+<!-- <script src="js/auth.js"></script> -->
+</body>
+<script src="favorites.js"></script>
+</html>

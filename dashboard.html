@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SamFlix — Movie Explorer</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+
+  <!-- HEADER -->
+  <header class="bg-gray-800 py-4 shadow-md">
+    <div class="max-w-6xl mx-auto flex flex-wrap justify-between items-center px-4 gap-3">
+      <h1 class="text-2xl font-bold text-red-500">🎬 SamFlix</h1>
+      
+      <div class="flex items-center gap-3">
+        <select id="categorySelect" class="px-3 py-2 text-gray-800 rounded">
+          <option value="trending">🔥 Trending</option>
+          <option value="now_playing">🎞️ Now Playing</option>
+          <option value="top_rated">⭐ Top Rated</option>
+          <option value="upcoming">🚀 Upcoming</option>
+        </select>
+        
+        <input id="searchInput" type="text" placeholder="Search movies..." 
+          class="px-4 py-2 rounded text-gray-900 w-52 sm:w-64">
+        <button id="searchBtn" class="bg-red-600 px-4 py-2 rounded hover:bg-red-700">Search</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="max-w-6xl mx-auto mt-6 px-4">
+    <h2 id="sectionTitle" class="text-xl font-semibold mb-4">🔥 Trending Movies</h2>
+    <div id="movieContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6"></div>
+  </main>
+
+  <!-- MOVIE MODAL -->
+  <div id="modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center p-4">
+    <div class="bg-gray-800 rounded-xl max-w-3xl w-full overflow-y-auto p-6 relative">
+      <button id="modalClose" class="absolute top-3 right-3 text-gray-300">✕</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <footer class="text-center py-6 text-white-500 text-sm ">
+    © 2025 SamFlix | Built by Samuel 🍿
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
