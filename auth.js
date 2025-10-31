@@ -38,7 +38,7 @@ if (signupForm) {
     e.preventDefault();
     const emailEl = document.getElementById('signupEmail');
     const passEl = document.getElementById('signupPassword');
-    const nameEl = document.getElementById('signupName'); // optional
+    const nameEl = document.getElementById('signupName');
 
     const email = emailEl?.value?.trim() || '';
     const password = passEl?.value || '';
@@ -50,23 +50,14 @@ if (signupForm) {
     }
 
     try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      try {
-        await sendEmailVerification(cred.user);
-        notify('Signup successful. Verification email sent. Please verify and then login.', 'success');
-      } catch (verErr) {
-        notify('Account created but failed to send verification email. Check console.', 'error');
-        console.error(verErr);
-      }
+      await createUserWithEmailAndPassword(auth, email, password);
+      notify('Signup successful! Redirecting to login...', 'success');
 
-      // Optionally store some info locally (not passwords)
+      // Store email for convenience
       localStorage.setItem('signedUpUser', email);
 
-      // Sign out immediately so user must verify email before using app
-      try { await signOut(auth); } catch (sErr) { /* ignore */ }
-
-      // redirect to login page (original behavior)
-      window.location.href = 'login.html';
+      // Redirect to login page
+      setTimeout(() => window.location.href = 'login.html', 700);
     } catch (err) {
       notify(err?.message || 'Signup failed', 'error');
       console.error(err);
@@ -107,31 +98,9 @@ if (loginForm) {
 
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
-
-      // If email not verified, offer to resend verification and then sign out
-      if (!cred.user.emailVerified) {
-        const resend = confirm('Email not verified. Resend verification email now?');
-        if (resend) {
-          try {
-            await sendEmailVerification(cred.user);
-            notify('Verification email resent. Check your inbox.', 'success');
-          } catch (sendErr) {
-            console.error(sendErr);
-            notify('Failed to resend verification email: ' + (sendErr.message || sendErr), 'error');
-          }
-        } else {
-          notify('Please verify your email before logging in.', 'info');
-        }
-
-        // Ensure the unverified user is signed out locally
-        try { await signOut(auth); } catch (_) { }
-        return;
-      }
-
       localStorage.setItem('loggedInUser', email);
       notify('Login successful! Redirecting...', 'success');
       setTimeout(() => window.location.href = 'dashboard.html', 600);
-
     } catch (err) {
       notify(err?.message || 'Login failed', 'error');
       console.error(err);
@@ -155,29 +124,9 @@ if (signInFormEl) {
 
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
-
-      if (!cred.user.emailVerified) {
-        const resend = confirm('Email not verified. Resend verification email now?');
-        if (resend) {
-          try {
-            await sendEmailVerification(cred.user);
-            notify('Verification email resent. Check your inbox.', 'success');
-          } catch (sendErr) {
-            console.error(sendErr);
-            notify('Failed to resend verification email: ' + (sendErr.message || sendErr), 'error');
-          }
-        } else {
-          notify('Please verify your email before logging in.', 'info');
-        }
-
-        try { await signOut(auth); } catch (_) { }
-        return;
-      }
-
       localStorage.setItem('loggedInUser', email);
       notify('Sign in successful. Redirecting...', 'success');
       setTimeout(() => window.location.href = 'dashboard.html', 700);
-
     } catch (err) {
       notify(err?.message || 'Sign in failed', 'error');
       console.error(err);
@@ -222,20 +171,14 @@ if (document.body?.dataset?.protected === "true") {
       // No user signed in -> redirect to login
       localStorage.removeItem('loggedInUser');
       window.location.href = 'login.html';
-    } else {
-      // Optionally check verification
-      if (!user.emailVerified) {
-        // If you want to force verification you can redirect or notify
-        // notify('Please verify your email before using the app', 'error');
-      }
     }
   });
 } else {
-  // If not protected, keep a lightweight onAuthStateChanged for convenience
+  // If not protected, keep a lightweight onAuthStateChanged for convenienceateChanged for convenience
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      // User is signed in, you can update UI or perform actions as needed
-      // For example, you might want to fetch and display user data
+      // User is signed in, you can update UI or perform actions as needed      // User is signed in, you can update UI or perform actions as needed
+      // For example, you might want to fetch and display user datae, you might want to fetch and display user data
     }
   });
 }
