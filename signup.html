@@ -1,29 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SamEats — Signup</title>
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-<!-- <link rel="stylesheet" href="css/style.css"> -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SamFlix — Signup</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="bootstrap.css">
+    <style>
+        input{
+            outline: ;
+        }
+    </style>
 </head>
-<body class="bg-gray-50 flex items-center justify-center min-h-screen">
-<div class="w-full max-w-md bg-white rounded-xl shadow p-6">
-<h2 class="text-2xl font-bold mb-4">Create your account</h2>
 
+<body class="bg-gray-900 flex items-center justify-center min-h-screen">
+    <div class=" bg-white rounded-xl shadow p-6 col-10 col-lg-5">
+        <h1 class="fw-bold text-center">SamFlix 🎬</h1>
+        <h2 class="text-xl font-bold mb-4">Create your account</h2>
 
-<form id="signupForm" class="space-y-4">
-<input id="name" type="text" placeholder="Full name" required class="w-full border px-4 py-2 rounded-md">
-<input id="email" type="email" placeholder="Email" required class="w-full border px-4 py-2 rounded-md">
-<input id="password" type="password" placeholder="Password" required class="w-full border px-4 py-2 rounded-md">
-<button type="submit" class="w-full bg-green-600 text-white py-2 rounded-md">Sign up</button>
-</form>
+        <form id="signupForm" class="space-y-4">
+            <!-- IDs updated to match auth.js -->
+            <input id="signupName" type="text" placeholder="Full name" required
+                class="w-full border px-4 py-2 rounded-md">
+            <input id="signupEmail" type="email" placeholder="Email" required
+                class="w-full border px-4 py-2 rounded-md">
+            <input id="signupPassword" type="password" placeholder="Password" required
+                class="w-full border px-4 py-2 rounded-md">
+            <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-md">Sign up</button>
+        </form>
 
-
-<p class="mt-4 text-sm">Already have an account? <a href="login.html" class="text-green-600">Login</a></p>
-</div>
-
-
-<script src="auth.js"></script>
+        <p class="mt-4 text-sm">Already have an account? <a href="login.html" class="text-green-600">Login</a></p>
+    </div>
 </body>
+
+<!-- load auth.js as a module so imports work -->
+<script type="module" src="auth.js"></script>
+
 </html>

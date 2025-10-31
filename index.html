@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SamFlix - Your Movie Universe</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .hero-section {
+      background-image: linear-gradient(rgba(0, 0, 0, 0.575), rgba(0, 0, 0, 0.8)),
+        url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?ixlib=rb-4.0.3');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      height: 90vh;
+    }
+
+    @media (max-width: 640px) {
+      .hero-section {
+        height: 100vh;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-gray-900 text-white">
+  <!-- Navbar -->
+  <nav class="bg-gray-900 border-b border-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo -->
+        <div class="flex-shrink-0">
+          <h1 class="text-2xl font-bold text-red-600">🎬 SamFlix</h1>
+        </div>
+
+        <!-- Desktop Navigation -->
+        <div class="hidden md:flex items-center space-x-4">
+          <a href="signup.html"
+            class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">
+            Sign Up
+          </a>
+          <a href="login.html"
+            class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">
+            Login
+          </a>
+        </div>
+
+        <!-- Mobile menu button -->
+        <div class="md:hidden">
+          <button type="button"
+            class="mobile-menu-button p-2 rounded-md text-gray-400 hover:text-white focus:outline-none">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Navigation -->
+    <div class="hidden mobile-menu md:hidden border-t border-gray-800">
+      <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+        <a href="signup.html"
+          class="block px-3 py-2 rounded-md text-base font-medium text-white bg-red-600 hover:bg-red-700">
+          Sign Up
+        </a>
+        <a href="login.html" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700">
+          Login
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <div class="hero-section flex items-center justify-center">
+    <div class="text-center px-4 sm:px-6 lg:px-8">
+      <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 text-white">
+        Your Gateway to <span class="text-red-600">Endless</span> Entertainment
+      </h1>
+      <p class="text-lg sm:text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+        Discover thousands of movies, from timeless classics to the latest blockbusters.
+        Start your cinematic journey today.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="signup.html"
+          class="bg-red-600 hover:bg-red-700 px-8 py-3 rounded-lg col-3 text-lg font-semibold transition-colors">
+          Get Started
+        </a>
+        <a href="#features"
+          class="bg-gray-800 hover:bg-gray-700 px-8 py-3 rounded-lg  col-3text-lg font-semibold transition-colors">
+          Learn More
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Optional: Features Section -->
+  <div id="features" class="py-16 bg-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center">
+        <h2 class="text-3xl font-bold mb-12">Why Choose SamFlix?</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="p-6 rounded-lg bg-gray-900">
+            <div class="text-4xl mb-4">🎯</div>
+            <h3 class="text-xl font-semibold mb-2">Personalized Recommendations</h3>
+            <p class="text-gray-400">Get movie suggestions tailored to your taste</p>
+          </div>
+          <div class="p-6 rounded-lg bg-gray-900">
+            <div class="text-4xl mb-4">🌟</div>
+            <h3 class="text-xl font-semibold mb-2">HD Quality</h3>
+            <p class="text-gray-400">Enjoy crystal clear picture quality</p>
+          </div>
+          <div class="p-6 rounded-lg bg-gray-900">
+            <div class="text-4xl mb-4">💫</div>
+            <h3 class="text-xl font-semibold mb-2">Regular Updates</h3>
+            <p class="text-gray-400">New movies added every week</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 border-t border-gray-800">
+    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row items-center justify-between">
+        <div class="text-gray-400 text-sm">
+          © 2025 SamFlix. All rights reserved.
+        </div>
+        <div class="flex items-center space-x-4 mt-4 md:mt-0">
+          <a href="#" class="text-gray-400 hover:text-white text-sm">Privacy Policy</a>
+          <a href="#" class="text-gray-400 hover:text-white text-sm">Terms of Service</a>
+          <a href="#" class="text-gray-400 hover:text-white text-sm">Contact</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Mobile menu toggle
+    const mobileMenuButton = document.querySelector('.mobile-menu-button');
+    const mobileMenu = document.querySelector('.mobile-menu');
+
+    mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+  </script>
+</body>
+
+</html>
