@@ -1,3 +1,32 @@
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        signUp();
+    }
+})
+
+const toast = (message, bgColor, color, fontWeight, marginTop, borderRadius) => {
+    Toastify({
+        text: message,
+        duration: 1000,
+        // destination: "https://github.com/apvarun/toastify-js",
+        newWindow: true,
+        close: true,
+        gravity: "top", // `top` or `bottom`
+        position: "center", // `left`, `center` or `right`
+        stopOnFocus: true, // Prevents dismissing of toast on hover
+        style: {
+            background: bgColor,
+            color,
+            fontWeight,
+            marginTop,
+            borderRadius,
+        },
+        onClick: function () { } // Callback after click
+    }).showToast();
+}
+
+
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import {
   getAuth,
@@ -51,7 +80,7 @@ if (signupForm) {
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      notify('Signup successful! Redirecting to login...', 'success');
+      notify('Signup successful! Redirecting to login page...', 'success');
 
       // Store email for convenience
       localStorage.setItem('signedUpUser', email);

@@ -7,24 +7,24 @@
     <title>SamFlix — Login</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="bootstrap.css">
-    <!-- <link rel="stylesheet" href="css/style.css"> -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 </head>
 
 <body class="bg-gray-900 flex items-center justify-center min-h-screen">
-    <div class="w-full max-w-md bg-white rounded-xl shadow p-6 col-10 col-lg-5">
+    <div class="bg-white rounded-xl shadow p-6 col-10 col-lg-5">
         <h2 class="text-2xl font-bold mb-4">Welcome to SamFlix</h2>
-        <p class="text-sm text-gray-600 mb-4">Login to access your saved recipes</p>
+        <p class="text-sm text-gray-600 mb-4">Login to access your favorites movies</p>
 
 
         <form id="loginForm" class="space-y-4">
             <input id="email" type="email" placeholder="Email" required class="w-full border px-4 py-2 rounded-md">
             <input id="password" type="password" placeholder="Password" required
                 class="w-full border px-4 py-2 rounded-md">
-            <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-md">Login</button>
+            <button type="submit" class="w-full py-2 rounded-md fw-bold" style="background-color: rgb(17,24,39);color: rgb(220,38,38);">Login</button>
         </form>
 
 
-        <p class="mt-4 text-sm">Don't have account? <a href="signup.html" class="text-green-600">Create one</a></p>
+        <p class="mt-4 text-sm">Don't have account? <a href="signup.html" class="text-green-600 text-decoration-none fw-bold text-black">Create one</a></p>
     </div>
 
 </body>
