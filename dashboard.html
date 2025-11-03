@@ -5,208 +5,344 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SamFlix — Movie Explorer</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="bootstrap.css">
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <style>
-    body { font-family: 'Poppins', sans-serif; }
-    /* small visual polish for the mobile menu transition */
-    .menu-enter { transform: translateY(-6px); opacity: 0; }
-    .menu-enter-active { transform: translateY(0); opacity: 1; transition: all 180ms ease-out; }
-    .menu-leave { transform: translateY(0); opacity: 1; }
-    .menu-leave-active { transform: translateY(-6px); opacity: 0; transition: all 140ms ease-in; }
+    /* keep desktop layout unchanged */
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 9999px;
+      overflow: hidden;
+      display: inline-block;
+      background: #374151;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    /* mobile dropdown */
+    .mobile-dropdown {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      background: #111827;
+      border-radius: 8px;
+      padding: 6px;
+      min-width: 180px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+      display: none;
+      z-index: 60;
+    }
+
+    .mobile-dropdown.active {
+      display: block;
+    }
+
+    /* mobile search overlay */
+    .search-overlay {
+      position: fixed;
+      top: -100%;
+      left: 0;
+      right: 0;
+      background: rgba(17, 24, 39, 0.98);
+      padding: 12px;
+      transition: top .25s ease;
+      z-index: 70;
+    }
+
+    .search-overlay.active {
+      top: 0;
+    }
+
+    /* mobile menu (slide) */
+    .mobile-menu {
+      position: fixed;
+      right: -100%;
+      top: 0;
+      bottom: 0;
+      width: 260px;
+      background: #111827;
+      transition: right .25s ease;
+      z-index: 65;
+    }
+
+    .mobile-menu.active {
+      right: 0;
+    }
+
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+      z-index: 60;
+    }
+
+    .backdrop.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
   </style>
 </head>
 
 <body class="bg-gray-900 text-white min-h-screen">
+  <!-- Header (desktop layout kept intact) -->
+  <header class="bg-gray-800 py-3 shadow-md sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 flex items-center justify-between gap-4">
+      <a href="dashboard.html" class="text-2xl font-bold text-red-500">🎬 SamFlix</a>
 
-  <!-- HEADER -->
-  <header class="bg-gray-800 py-3 shadow-md">
-    <div class="max-w-6xl mx-auto flex items-center justify-between px-4 gap-3">
-      <!-- left: brand -->
-      <div class="flex items-center gap-3">
-        <h1 class="text-2xl font-bold text-red-500 cursor-pointer" onclick="window.location.href='dashboard.html'">🎬 SamFlix</h1>
+      <!-- DESKTOP NAV - unchanged -->
+      <div class="hidden md:flex items-center gap-4">
+        <select id="categorySelect" class="px-3 py-2 text-gray-800 rounded">
+          <option value="trending">🔥 Trending</option>
+          <option value="drama">🎭 Drama</option>
+          <option value="comedy">😂 Comedy</option>
+          <option value="action">💥 Action</option>
+          <option value="romance">❤️ Romance</option>
+          <option value="thriller">🔪 Thriller</option>
+          <option value="horror">👻 Horror</option>
+          <option value="sci">🧠 Sci-Fi</option>
+        </select>
+
+        <input id="searchInput" type="text" placeholder="Search movies..."
+          class="px-4 py-2 rounded text-gray-900 w-52 sm:w-64 focus:outline-none">
+        <button id="searchBtn" class="bg-red-600 px-4 py-2 rounded hover:bg-red-700 transition">Search</button>
       </div>
 
-      <!-- right: desktop controls + mobile toggle (toggle on the far right) -->
-      <div class="flex items-center gap-3">
-        <!-- Desktop controls -->
-        <div class="hidden sm:flex items-center gap-3">
-          <a href="favorites.html" class="bg-gray-700 px-4 py-2 rounded hover:bg-gray-600 hover:text-white transition text-decoration-none">❤️ Favorites</a>
+      <!-- RIGHT: desktop user (kept) -->
+      <div class="hidden md:flex items-center gap-4">
+        <a href="favorites.html" class="text-gray-300 hover:text-white">❤️ Favorites</a>
+        <div class="relative">
+          <button id="userMenuBtn" class="flex items-center gap-2" aria-haspopup="true" aria-expanded="false">
+            <div id="userAvatar" class="user-avatar">U</div>
+          </button>
+        </div>
+      </div>
 
-          <select id="categorySelect" class="px-3 py-2 text-gray-800 rounded ">
-           <option value="trending">🔥 Trending</option>
-  <option value="drama">🎭 Drama</option>
-  <option value="comedy">😂 Comedy</option>
-  <option value="action">💥 Action</option>
-  <option value="romance">❤️ Romance</option>
-  <option value="thriller">🔪 Thriller</option>
-  <option value="horror">👻 Horror</option>
-  <option value="sci">🧠 Sci-Fi</option>
-          </select>
+      <!-- MOBILE CONTROLS (only mobile) -->
+      <div class="md:hidden flex items-center gap-3 relative">
+        <button id="searchToggle" class="text-gray-300 hover:text-white" aria-label="Open search">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </button>
 
-          <input id="searchInput" type="text" placeholder="Search movies..." 
-            class="px-4 py-2 rounded text-gray-900 w-52 sm:w-64 focus:outline-none">
+        <!-- avatar + dropdown inside toggle bar -->
+        <div class="relative">
+          <button id="mobileAvatarBtn" class="flex items-center" aria-haspopup="true" aria-expanded="false">
+            <div id="mobileUserAvatar" class="user-avatar">U</div>
+          </button>
 
-          <button id="searchBtn" class="bg-red-600 px-4 py-2 rounded hover:bg-red-700 transition">Search</button>
+          <div id="mobileDropdown" class="mobile-dropdown" role="menu" aria-hidden="true">
+            <div class="px-3 py-2 border-b border-gray-700">
+              <div id="mobileName" class="text-sm font-medium">User</div>
+              <div id="mobileEmail" class="text-xs text-gray-400 truncate"></div>
+            </div>
+            <a href="favorites.html" class="block px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 rounded">❤️ Favorites</a>
+            <button id="mobileLogout" class="w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 rounded">🚪 Logout</button>
+          </div>
         </div>
 
-        <!-- Mobile toggle on right -->
-        <button id="navToggle" class="sm:hidden p-2 text-gray-300 rounded hover:bg-gray-700 focus:outline-none ml-2" aria-label="Open menu" aria-expanded="false">
-          <!-- hamburger -->
-          <svg id="hamburgerIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <button id="mobileMenuBtn" class="text-gray-300 hover:text-white" aria-label="Open menu">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-          <!-- close icon (hidden) -->
-          <svg id="closeIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
     </div>
-
-    <!-- Mobile menu (hidden by default) -->
-    <nav id="mobileMenu" class="sm:hidden bg-gray-800 border-t border-gray-700 hidden">
-      <div class="max-w-6xl mx-auto px-4 py-4 space-y-3">
-        <a href="favorites.html" class="block bg-gray-700 px-4 py-2 rounded hover:bg-gray-600 transition text-decoration-none">❤️ Favorites</a>
-
-        <div class="row"><label class="block text-gray-300 col-4 pt-1 ps-5">Category</label>
-        <select id="mobileCategorySelect" class="w-full px-3 py-2 rounded text-gray-900 col-7 me-3">
-          <option value="trending">🔥 Trending</option>
-          <option value="now_playing">🎞️ Now Playing</option>
-          <option value="top_rated">⭐ Top Rated</option>
-          <option value="upcoming">🚀 Upcoming</option>
-          <option value="comedy">😂 Comedy</option>
-          <option value="drama">🎭 Drama</option>
-          <option value="romance">💖 Romance</option>
-          <option value="action">💥 Action</option>
-          <option value="thriller">😱 Thriller</option>
-          <option value="horror">👻 Horror</option>
-          <option value="sci-fi">🚀 Sci-Fi</option>
-        </select>
-        </div>
-
-        <div class="flex gap-2">
-          <input id="mobileSearchInput" type="text" placeholder="Search movies..." class="flex-1 px-3 py-2 rounded text-gray-900 focus:outline-none">
-          <button id="mobileSearchBtn" class="bg-red-600 px-4 py-2 rounded hover:bg-red-700 transition">Search</button>
-        </div>
-      </div>
-    </nav>
   </header>
 
-  <!-- MAIN CONTENT -->
-  <main class="max-w-6xl mx-auto mt-6 px-4">
-    <h2 id="sectionTitle" class="text-xl font-semibold mb-4">🔥 Trending Movies</h2>
-<div id="movieContainer" 
-class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 
-            gap-6 p-2"></div>
-  </main>
-
-  <!-- MOVIE MODAL -->
-  <div id="modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center p-4">
-<div class="bg-gray-800 rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
-      <button id="modalClose" class="absolute top-3 right-3 text-gray-300 hover:text-white">✕</button>
-      <div id="modalContent"></div>
+  <!-- Mobile search overlay -->
+  <div id="searchOverlay" class="search-overlay">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="flex items-center gap-2">
+        <input id="overlaySearch" type="text" placeholder="Search movies..." class="flex-1 px-4 py-2 rounded bg-gray-700 text-white">
+        <button id="mobileSearchBtn" class="bg-red-600 px-4 py-2 rounded">Search</button>
+        <button id="closeSearch" class="text-gray-300 px-2">Close</button>
+      </div>
     </div>
   </div>
 
-  <footer class="text-center py-6 text-gray-400 text-sm border-t border-gray-700 mt-8">
-    © 2025 SamFlix | Built by <span class="text-red-500 font-semibold">Samuel</span> 🍿
-  </footer>
+  <!-- Mobile slide menu -->
+  <div id="mobileMenu" class="mobile-menu">
+    <div class="p-4">
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+          <div id="mobileMenuAvatar" class="user-avatar">U</div>
+          <div>
+            <div id="mobileMenuName" class="font-medium">User</div>
+            <div id="mobileMenuEmail" class="text-sm text-gray-400 truncate"></div>
+          </div>
+        </div>
+        <button id="closeMobileMenu" class="text-gray-300">Close</button>
+      </div>
+      <nav class="space-y-2">
+        <a href="favorites.html" class="block px-3 py-2 text-gray-200 hover:bg-gray-700 rounded">❤️ Favorites</a>
+        <button id="mobileMenuLogout" class="w-full text-left px-3 py-2 text-gray-200 hover:bg-gray-700 rounded">🚪 Logout</button>
+      </nav>
+    </div>
+  </div>
 
-  <!-- Inline script to handle mobile toggle + simple wiring for search & modal controls.
-       Keeps script.js intact for additional logic. -->
+  <div id="backdrop" class="backdrop"></div>
+
+  <!-- Main content (kept simple; desktop layout unchanged) -->
+  <main class="max-w-6xl mx-auto mt-6 px-4">
+    <div class="flex items-center justify-between mb-6">
+      <h2 id="sectionTitle" class="text-xl font-semibold">🔥 Trending Movies</h2>
+      <p id="userGreeting" class="text-gray-300 text-sm"></p>
+    </div>
+    <div id="movieContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+  </main>
+
+  <!-- scripts: Toastify -->
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+  <!-- load CryptoJS before avatar code so MD5 is available -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+  <!-- load your app logic (unchanged script.js you gave me) -->
+  <script src="script.js"></script>
+
+  <!-- Avatar + mobile wiring (runs after script.js and CryptoJS are loaded) -->
   <script>
     (function () {
-      const navToggle = document.getElementById('navToggle');
-      const mobileMenu = document.getElementById('mobileMenu');
-      const hamburgerIcon = document.getElementById('hamburgerIcon');
-      const closeIcon = document.getElementById('closeIcon');
+      // small helper: read localStorage (safe)
+      const userEmail = localStorage.getItem('loggedInUser') || '';
+      const userName = localStorage.getItem('userName') || (userEmail ? userEmail.split('@')[0] : 'User');
 
-      navToggle.addEventListener('click', () => {
-        const expanded = navToggle.getAttribute('aria-expanded') === 'true';
-        navToggle.setAttribute('aria-expanded', String(!expanded));
-        mobileMenu.classList.toggle('hidden');
-        hamburgerIcon.classList.toggle('hidden');
-        closeIcon.classList.toggle('hidden');
+      // MD5 via CryptoJS
+      function md5(str) {
+        if (!str) return '';
+        return CryptoJS.MD5(str.trim().toLowerCase()).toString();
+      }
+
+      function getGravatar(email) {
+        if (!email) return null;
+        return `https://www.gravatar.com/avatar/${md5(email)}?d=mp&s=200`;
+      }
+
+      function applyAvatar(el, name, email) {
+        if (!el) return;
+        const url = getGravatar(email);
+        if (!url) {
+          el.textContent = name.charAt(0).toUpperCase();
+          return;
+        }
+        const img = new Image();
+        img.src = url;
+        img.className = 'w-full h-full object-cover';
+        img.onload = () => {
+          el.innerHTML = '';
+          el.appendChild(img);
+        };
+        img.onerror = () => {
+          el.textContent = name.charAt(0).toUpperCase();
+        };
+      }
+
+      // set avatars for the three spots
+      applyAvatar(document.getElementById('userAvatar'), userName, userEmail);
+      applyAvatar(document.getElementById('mobileUserAvatar'), userName, userEmail);
+      applyAvatar(document.getElementById('mobileMenuAvatar'), userName, userEmail);
+
+      // populate mobile name/email places
+      const setText = (id, txt) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = txt || '';
+      };
+      setText('mobileName', userName);
+      setText('mobileEmail', userEmail);
+      setText('mobileMenuName', userName);
+      setText('mobileMenuEmail', userEmail);
+
+      // greeting
+      const greetEl = document.getElementById('userGreeting');
+      if (greetEl) {
+        const hr = new Date().getHours();
+        const greet = hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';
+        greetEl.textContent = `${greet}, ${userName}`;
+      }
+
+      // mobile dropdown toggle
+      const mobileAvatarBtn = document.getElementById('mobileAvatarBtn');
+      const mobileDropdown = document.getElementById('mobileDropdown');
+      mobileAvatarBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        mobileDropdown.classList.toggle('active');
       });
-
-      // Close mobile menu when clicking outside (optional)
       document.addEventListener('click', (e) => {
-        if (!mobileMenu.contains(e.target) && !navToggle.contains(e.target) && !mobileMenu.classList.contains('hidden')) {
-          mobileMenu.classList.add('hidden');
-          navToggle.setAttribute('aria-expanded', 'false');
-          hamburgerIcon.classList.remove('hidden');
-          closeIcon.classList.add('hidden');
+        if (!mobileDropdown) return;
+        if (!mobileDropdown.contains(e.target) && !mobileAvatarBtn.contains(e.target)) {
+          mobileDropdown.classList.remove('active');
         }
       });
 
-      // Mirror mobile controls to desktop handlers (basic wiring)
-      const categorySelect = document.getElementById('categorySelect');
-      const mobileCategorySelect = document.getElementById('mobileCategorySelect');
-      const searchInput = document.getElementById('searchInput');
-      const mobileSearchInput = document.getElementById('mobileSearchInput');
-      const searchBtn = document.getElementById('searchBtn');
+      // wire logout buttons
+      ['mobileLogout', 'mobileMenuLogout'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.addEventListener('click', () => {
+          if (typeof window.logout === 'function') {
+            window.logout();
+          } else {
+            localStorage.removeItem('loggedInUser');
+            localStorage.removeItem('userName');
+            window.location.href = 'login.html';
+          }
+        });
+      });
+
+      // mobile slide menu toggle
+      const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+      const mobileMenu = document.getElementById('mobileMenu');
+      const closeMobileMenu = document.getElementById('closeMobileMenu');
+      const backdrop = document.getElementById('backdrop');
+
+      const openMenu = () => { mobileMenu.classList.add('active'); backdrop.classList.add('active'); };
+      const closeMenu = () => { mobileMenu.classList.remove('active'); backdrop.classList.remove('active'); };
+
+      mobileMenuBtn?.addEventListener('click', openMenu);
+      closeMobileMenu?.addEventListener('click', closeMenu);
+      backdrop?.addEventListener('click', closeMenu);
+
+      // mobile search overlay wiring
+      const searchToggle = document.getElementById('searchToggle');
+      const searchOverlay = document.getElementById('searchOverlay');
+      const closeSearch = document.getElementById('closeSearch');
+      const overlaySearch = document.getElementById('overlaySearch');
       const mobileSearchBtn = document.getElementById('mobileSearchBtn');
 
-      // Keep selects in sync
-      if (categorySelect && mobileCategorySelect) {
-        mobileCategorySelect.value = categorySelect.value;
-        categorySelect.addEventListener('change', () => mobileCategorySelect.value = categorySelect.value);
-        mobileCategorySelect.addEventListener('change', () => categorySelect.value = mobileCategorySelect.value);
-      }
+      searchToggle?.addEventListener('click', () => { searchOverlay.classList.add('active'); overlaySearch.focus(); });
+      closeSearch?.addEventListener('click', () => { searchOverlay.classList.remove('active'); });
 
-      // Keep search inputs in sync
-      if (searchInput && mobileSearchInput) {
-        mobileSearchInput.value = searchInput.value;
-        searchInput.addEventListener('input', () => mobileSearchInput.value = searchInput.value);
-        mobileSearchInput.addEventListener('input', () => searchInput.value = mobileSearchInput.value);
-      }
-
-      // Basic search wiring - delegate to any global function defined in script.js if present
-      function doSearch() {
-        const query = (searchInput && searchInput.value) || (mobileSearchInput && mobileSearchInput.value) || '';
-        const category = (categorySelect && categorySelect.value) || (mobileCategorySelect && mobileCategorySelect.value) || 'trending';
-        // If global search handler exists, call it
+      const performSearch = () => {
+        const q = overlaySearch?.value?.trim() || '';
+        if (!q) return;
+        // call handleSearch from your script.js (we left that global in your script)
         if (typeof window.handleSearch === 'function') {
-          window.handleSearch({ query, category });
+          window.handleSearch({ query: q, category: 'trending' });
         } else {
-          // Fallback: update section title and clear results (main app script should populate)
-          const title = document.getElementById('sectionTitle');
-          title.textContent = query ? `Search: "${query}"` : `${category.replace('_', ' ').toUpperCase()}`;
-          // You can call your existing fetch/populate logic here from script.js
-          console.log('Search triggered', { query, category });
+          // fallback: if handleSearch missing, trigger the visible search button click
+          const desktopInput = document.getElementById('searchInput');
+          const desktopBtn = document.getElementById('searchBtn');
+          if (desktopInput) desktopInput.value = q;
+          if (desktopBtn) desktopBtn.click();
         }
-        // Close mobile menu on search
-        if (!mobileMenu.classList.contains('hidden')) {
-          mobileMenu.classList.add('hidden');
-          navToggle.setAttribute('aria-expanded', 'false');
-          hamburgerIcon.classList.remove('hidden');
-          closeIcon.classList.add('hidden');
-        }
-      }
-
-      if (searchBtn) searchBtn.addEventListener('click', doSearch);
-      if (mobileSearchBtn) mobileSearchBtn.addEventListener('click', doSearch);
-
-      // Modal close wiring (in case script.js doesn't handle)
-      const modal = document.getElementById('modal');
-      const modalClose = document.getElementById('modalClose');
-
-      if (modalClose) modalClose.addEventListener('click', () => modal.classList.add('hidden'));
-      // close modal on overlay click
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.classList.add('hidden');
-      });
-
-      // Optional: open modal helper if other scripts call window.openMovieModal(content)
-      window.openMovieModal = function (htmlContent) {
-        const modalContent = document.getElementById('modalContent');
-        if (modalContent) modalContent.innerHTML = htmlContent || '';
-        modal.classList.remove('hidden');
+        searchOverlay.classList.remove('active');
+        if (overlaySearch) overlaySearch.value = '';
       };
-    })();
-  </script>
 
-  <!-- keep external script for existing app logic -->
-  <script src="script.js"></script>
+      overlaySearch?.addEventListener('keyup', (e) => { if (e.key === 'Enter') performSearch(); });
+      mobileSearchBtn?.addEventListener('click', performSearch);
+
+    })();
+
+    window.handleSearch = handleSearch;
+
+  </script>
 </body>
 </html>

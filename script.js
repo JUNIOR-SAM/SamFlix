@@ -1,283 +1,235 @@
-// script.js — SamFlix main logic with Favorites support
+// Constants
 const BASE_URL = "https://api.tvmaze.com";
+const PLACEHOLDER_IMG = "https://via.placeholder.com/300x420?text=No+Image";
 
-const movieContainer = document.getElementById("movieContainer");
-const sectionTitle = document.getElementById("sectionTitle");
-const searchInput = document.getElementById("searchInput");
-const searchBtn = document.getElementById("searchBtn");
-const categorySelect = document.getElementById("categorySelect");
-const modal = document.getElementById("modal");
-const modalContent = document.getElementById("modalContent");
-const modalClose = document.getElementById("modalClose");
+// DOM Elements
+const elements = {
+  movieContainer: document.getElementById("movieContainer"),
+  sectionTitle: document.getElementById("sectionTitle"),
+  searchInput: document.getElementById("searchInput"),
+  searchBtn: document.getElementById("searchBtn"),
+  categorySelect: document.getElementById("categorySelect"),
+  modal: document.getElementById("modal"),
+  modalContent: document.getElementById("modalContent"),
+  modalClose: document.getElementById("modalClose"),
+  overlaySearch: document.getElementById("overlaySearch"),
+  mobileSearchBtn: document.getElementById("mobileSearchBtn")
+};
 
-// favorites stored in localStorage
+// Favorites Management
 let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
 
-// Utility to simplify show object saved in favorites
-function makeSaveableShow(show) {
-  return {
-    id: show.id,
-    name: show.name,
-    image: show.image?.medium || show.image?.original || "",
-    genres: show.genres || [],
-    summary: show.summary ? show.summary.replace(/<[^>]*>/g, "") : "",
-    url: show.officialSite || show.url || ""
-  };
-}
+const favoritesManager = {
+  isFavorite: (showId) => favorites.some(f => f.id === showId),
 
-function isFavorite(showId) {
-  return favorites.some(f => f.id === showId);
-}
+  save: () => localStorage.setItem("favorites", JSON.stringify(favorites)),
 
-function saveFavorites() {
-  localStorage.setItem("favorites", JSON.stringify(favorites));
-}
+  toggle: (show) => {
+    const exists = favorites.find(f => f.id === show.id);
+    if (exists) {
+      favorites = favorites.filter(f => f.id !== show.id);
+      showToast(`Removed "${show.name}" from Favorites`, 'info');
+    } else {
+      favorites.push({
+        id: show.id,
+        name: show.name,
+        image: show.image?.medium || show.image?.original || "",
+        genres: show.genres || [],
+        summary: show.summary ? show.summary.replace(/<[^>]*>/g, "") : "",
+        url: show.officialSite || show.url || ""
+      });
+      showToast(`Added "${show.name}" to Favorites`, 'success');
+    }
+    favoritesManager.save();
+  }
+};
 
-// Toggle favorite and alert user
-function toggleFavorite(show) {
-  const exists = favorites.find(f => f.id === show.id);
-  if (exists) {
-    favorites = favorites.filter(f => f.id !== show.id);
-    saveFavorites();
-    alert(`Removed "${show.name}" from Favorites ❌`);
+// Toast Notification
+function showToast(message, type = 'info') {
+  if (typeof Toastify === 'function') {
+    Toastify({
+      text: message,
+      duration: 3000,
+      gravity: "top",
+      position: "right",
+      style: {
+        background: type === 'success' ? '#10b981' :
+          type === 'error' ? '#ef4444' : '#3b82f6'
+      }
+    }).showToast();
   } else {
-    favorites.push(makeSaveableShow(show));
-    saveFavorites();
-    alert(`Added "${show.name}" to Favorites ✅\nOpen Favorites page to view.`);
+    alert(message);
   }
 }
 
-// Fetch shows (all or search)
+// API Calls
+async function fetchShows(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Network response was not ok');
+    return await response.json();
+  } catch (error) {
+    console.error('Fetch error:', error);
+    throw error;
+  }
+}
+
+// Show Loading/Display Functions
 async function loadShows(category = "trending") {
-  movieContainer.innerHTML = `<p class="text-gray-400">Loading...</p>`;
-  sectionTitle.textContent = "🎬 " + formatCategory(category);
+  elements.movieContainer.innerHTML = `<p class="text-gray-400">Loading...</p>`;
+  elements.sectionTitle.textContent = "🎬 " + formatCategory(category);
 
   try {
-    let url;
-    if (category === "trending") {
-      url = `${BASE_URL}/shows`;
-    } else if (category && category !== "") {
-      // For genres we try search endpoint (TVMaze doesn't have strict genre endpoint)
-      url = `${BASE_URL}/search/shows?q=${encodeURIComponent(category)}`;
-    } else {
-      url = `${BASE_URL}/shows`;
-    }
+    const url = category === "trending" ?
+      `${BASE_URL}/shows` :
+      `${BASE_URL}/search/shows?q=${encodeURIComponent(category)}`;
 
-    const res = await fetch(url);
-    const data = await res.json();
-
-    // search format: [{score, show}, ...] ; shows endpoint format: [show, ...]
-    const shows = Array.isArray(data) ? data.map(item => item.show || item) : [];
+    const data = await fetchShows(url);
+    const shows = Array.isArray(data) ?
+      data.map(item => item.show || item) : [];
 
     displayShows(shows);
   } catch (err) {
-    console.error(err);
-    movieContainer.innerHTML = `<p class="text-red-500">Failed to load shows.</p>`;
+    elements.movieContainer.innerHTML =
+      `<p class="text-red-500">Failed to load shows.</p>`;
+    showToast('Failed to load shows', 'error');
   }
 }
 
 function displayShows(shows) {
-  movieContainer.innerHTML = "";
-
-  if (!shows || shows.length === 0) {
-    movieContainer.innerHTML = `<p class="text-gray-400">No results found.</p>`;
+  if (!shows?.length) {
+    elements.movieContainer.innerHTML =
+      `<p class="text-gray-400">No results found.</p>`;
     return;
   }
 
-  // limit results for layout/perf
-  shows.slice(0, 40).forEach(show => {
-    const image = show.image ? (show.image.medium || show.image.original) : "https://via.placeholder.com/300x420?text=No+Image";
-    const title = show.name || "Untitled";
+  elements.movieContainer.innerHTML = shows
+    .slice(0, 40)
+    .map(show => createShowCard(show))
+    .join('');
 
-    const card = document.createElement("div");
-card.className =
-  "bg-gray-800 w-80 sm:w-72 md:w-64 lg:w-64 mx-auto rounded-lg overflow-hidden shadow hover:scale-105 transform transition cursor-pointer";
+  // Add event listeners to all cards
+  elements.movieContainer.querySelectorAll('.show-card').forEach(card => {
+    const showId = card.dataset.showId;
+    const show = shows.find(s => s.id.toString() === showId);
 
+    card.addEventListener('click', () => openModal(show));
 
-    // favorite button style depends on whether it's already fav
-    const favClass = isFavorite(show.id) ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-200";
-
-    card.innerHTML = `
-      <img src="${image}" alt="${escapeHtml(title)}" class="w-full h-80 object-cover">
-      <div class="p-3">
-        <h5 class="text-md font-semibold truncate">${escapeHtml(title)}</h5>
-        <p class="text-gray-400 text-sm">${(show.genres && show.genres.join(", ")) || "No Genre"}</p>
-        <div class="mt-2 d-flex justify-content-end  gap-2">
-          <button class="fav-btn px-3 py-2 text-sm rounded ${favClass}">${isFavorite(show.id) ? '💖 Favorited' : '🤍 Favorite'}</button>
-        </div>
-      </div>
-    `;
-
-    // details button
-    // card.querySelector(".details-btn").addEventListener("click", (e) => {
-    //   e.stopPropagation();
-    //   openModal(show);
-    // });
-
-    // favorite button
-    card.querySelector(".fav-btn").addEventListener("click", (e) => {
+    const favBtn = card.querySelector('.fav-btn');
+    favBtn?.addEventListener('click', (e) => {
       e.stopPropagation();
-      toggleFavorite(show);
-      const btn = e.currentTarget;
-      if (isFavorite(show.id)) {
-        btn.classList.remove("bg-gray-700", "text-gray-200");
-        btn.classList.add("bg-blue-600", "text-white");
-        btn.textContent = "💖 Favorited";
-      } else {
-        btn.classList.remove("bg-blue-600", "text-white");
-        btn.classList.add("bg-gray-700", "text-gray-200");
-        btn.textContent = "🤍 Favorite";
-      }
+      favoritesManager.toggle(show);
+      updateFavButton(favBtn, show.id);
     });
-
-    // clicking card itself also opens details
-    card.addEventListener("click", () => openModal(show));
-    movieContainer.appendChild(card);
   });
 }
 
-// Open modal with more data + trailer link
-// function openModal(show) {
-//   const image = show.image ? (show.image.original || show.image.medium) : "https://via.placeholder.com/400x600?text=No+Image";
-//   const trailerSearch = `https://www.youtube.com/results?search_query=${encodeURIComponent(show.name + " trailer")}`;
-//   modalContent.innerHTML = `
-//     <div class="flex flex-col md:flex-row gap-6">
-//       <img src="${image}" alt="${escapeHtml(show.name)}" class="w-full md:w-1/3 rounded-lg object-cover">
-//       <div>
-//         <h2 class="text-2xl font-bold mb-2">${escapeHtml(show.name)}</h2>
-//         <p class="text-gray-400 mb-3">${(show.genres && show.genres.join(", ")) || "Genre unknown"}</p>
-//         <p class="mb-4 text-sm">${show.summary ? show.summary.replace(/<[^>]*>/g, "") : "No description available."}</p>
-//         <div class="flex gap-3 justify-content-end mt-20">
-//           ${show.officialSite ? `<a href="${show.officialSite}" target="_blank" class="bg-red-600 px-4 py-2 rounded hover:bg-red-700 text-decoration-none text-white">Official Site</a>` : ""}
-//           <a href="${trailerSearch}" target="_blank" class="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 text-white text-decoration-none">🎬 Watch Trailer</a>
-//         </div>
-//       </div>
-//     </div>
-//   `;
-
-//   // wire up modal favorite button
-//   const modalFavBtn = document.getElementById("modalFavBtn");
-//   if (modalFavBtn) {
-//     modalFavBtn.addEventListener("click", () => {
-//       toggleFavorite(show);
-//       modalFavBtn.classList.toggle("bg-red-600");
-//       modalFavBtn.classList.toggle("bg-gray-700");
-//       modalFavBtn.textContent = isFavorite(show.id) ? '💖 Favorited' : '🤍 Favorite';
-//     });
-//   }
-
-//   modal.classList.remove("hidden");
-//   modal.classList.add("flex");
-// }
-
-
-
-function openModal(show) {
-  modal.classList.remove("hidden");
-  modal.classList.add("flex");
-
-  const image = show.image ? (show.image.original || show.image.medium)
-                           : "https://via.placeholder.com/400x600?text=No+Image";
-
-  // ✅ Rating (TVMaze average rating)
-  const rating = show.rating?.average ? show.rating.average : "N/A";
-
-  // ✅ Trailer Search
-  const trailerSearch = `https://www.youtube.com/results?search_query=${encodeURIComponent(show.name + " trailer")}`;
-
-  // ✅ Fallback official site
-  const officialLink =
-    show.officialSite ||
-    show.url ||
-    `https://www.google.com/search?q=${encodeURIComponent(show.name + " TV show")}`;
-
-  modalContent.innerHTML = `
-    <div class="flex flex-col md:flex-row gap-6">
-
-      <!-- IMAGE -->
-      <img src="${image}" 
-           alt="${escapeHtml(show.name)}" 
-           class="w-full md:w-1/3 rounded-lg object-cover">
-
-      <!-- DETAILS -->
-      <div>
-        <h2 class="text-2xl font-bold mb-2">${escapeHtml(show.name)}</h2>
-
-        <p class="text-gray-400 mb-3">
-          ${(show.genres && show.genres.join(", ")) || "Genre unknown"}
-        </p>
-
-        <!-- ⭐ RATING ONLY -->
-        <p class="mb-3">
-          <span class="text-yellow-400 text-xl">⭐</span>
-          <span class="font-semibold">${rating}</span> / 10
-        </p>
-
-        <p class="mb-4 text-sm">
-          ${show.summary ? show.summary.replace(/<[^>]*>/g, "") : "No description available."}
-        </p>
-
-        <!-- BUTTONS -->
-        <div class="flex gap-3 justify-end mt-20">
-          <a href="${officialLink}" target="_blank" 
-             class="bg-red-600 px-4 py-2 rounded hover:bg-red-700 text-decoration-none text-white">
-             Official Site
-          </a>
-
-          <a href="${trailerSearch}" target="_blank" 
-             class="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 text-white text-decoration-none">
-             🎬 Watch Trailer
-          </a>
+function createShowCard(show) {
+  const image = show.image?.medium || show.image?.original || PLACEHOLDER_IMG;
+  const isFav = favoritesManager.isFavorite(show.id);
+  return `
+    <div class="show-card bg-gray-800 w-80 sm:w-72 md:w-64 lg:w-64 mx-auto rounded-lg overflow-hidden shadow hover:scale-105 transform transition cursor-pointer" width:"50px" data-show-id="${show.id}">
+      <img src="${image}" alt="${escapeHtml(show.name)}" class="w-full  h-80 object-cover">
+      <div class="p-3">
+        <h5 class="text-md font-semibold truncate">${escapeHtml(show.name)}</h5>
+        <p class="text-gray-400 text-sm">${show.genres?.join(", ") || "No Genre"}</p>
+        <div class="mt-2 flex justify-end gap-2">
+          <button class="fav-btn px-3 py-2 text-sm rounded ${isFav ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-200'}">
+            ${isFav ? '💖 Favorited' : '🤍 Favorite'}
+          </button>
         </div>
       </div>
     </div>
   `;
 }
 
+function updateFavButton(btn, showId) {
+  const isFav = favoritesManager.isFavorite(showId);
+  btn.className = `fav-btn px-3 py-2 text-sm rounded ${isFav ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-200'
+    }`;
+  btn.textContent = isFav ? '💖 Favorited' : '🤍 Favorite';
+}
 
-// close modal
-modalClose?.addEventListener("click", () => {
-  modal.classList.add("hidden");
-  modal.classList.remove("flex");
-});
-modal.addEventListener("click", (e) => {
-  if (e.target === modal) modal.classList.add("hidden");
+function openModal(show) {
+  if (!show || !elements.modal) return;
+
+  const image = show.image?.original || show.image?.medium || PLACEHOLDER_IMG;
+  const rating = show.rating?.average || "N/A";
+  const trailerSearch = `https://www.youtube.com/results?search_query=${encodeURIComponent(show.name + " trailer")
+    }`;
+  const officialLink = show.officialSite || show.url ||
+    `https://www.google.com/search?q=${encodeURIComponent(show.name + " TV show")}`;
+
+  elements.modalContent.innerHTML = `
+    <div class="flex flex-col md:flex-row gap-6">
+      <img src="${image}" alt="${escapeHtml(show.name)}" 
+           class="w-full md:w-1/3 rounded-lg object-cover">
+      <div>
+        <h2 class="text-2xl font-bold mb-2">${escapeHtml(show.name)}</h2>
+        <p class="text-gray-400 mb-3">${show.genres?.join(", ") || "Genre unknown"}</p>
+        <p class="mb-3">
+          <span class="text-yellow-400 text-xl">⭐</span>
+          <span class="font-semibold">${rating}</span> / 10
+        </p>
+        <p class="mb-4 text-sm">${show.summary ? show.summary.replace(/<[^>]*>/g, "") : "No description available."
+    }</p>
+        <div class="flex gap-3 justify-end mt-auto">
+          <a href="${officialLink}" target="_blank" 
+             class="bg-red-600 px-4 py-2 rounded hover:bg-red-700 text-white no-underline">
+            Official Site
+          </a>
+          <a href="${trailerSearch}" target="_blank" 
+             class="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 text-white no-underline">
+            🎬 Watch Trailer
+          </a>
+        </div>
+      </div>
+    </div>
+  `;
+
+  elements.modal.classList.remove("hidden");
+  elements.modal.classList.add("flex");
+}
+
+// Event Listeners
+elements.modalClose?.addEventListener("click", () => {
+  elements.modal.classList.add("hidden");
+  elements.modal.classList.remove("flex");
 });
 
-// Search
-searchBtn?.addEventListener("click", async () => {
-  const query = (searchInput && searchInput.value.trim()) || "";
+elements.modal?.addEventListener("click", (e) => {
+  if (e.target === elements.modal) {
+    elements.modal.classList.add("hidden");
+  }
+});
+
+elements.searchBtn?.addEventListener("click", async () => {
+  const query = elements.searchInput?.value.trim();
   if (!query) return;
-  sectionTitle.textContent = `🔍 Results for "${query}"`;
-  movieContainer.innerHTML = `<p class="text-gray-400">Searching...</p>`;
+
+  elements.sectionTitle.textContent = `🔍 Results for "${query}"`;
+  elements.movieContainer.innerHTML = `<p class="text-gray-400">Searching...</p>`;
 
   try {
-    const res = await fetch(`${BASE_URL}/search/shows?q=${encodeURIComponent(query)}`);
-    const data = await res.json();
-    const shows = data.map(d => d.show);
-    displayShows(shows);
+    const data = await fetchShows(
+      `${BASE_URL}/search/shows?q=${encodeURIComponent(query)}`
+    );
+    displayShows(data.map(d => d.show));
   } catch (err) {
-    console.error(err);
-    movieContainer.innerHTML = `<p class="text-red-500">Search failed.</p>`;
+    elements.movieContainer.innerHTML =
+      `<p class="text-red-500">Search failed.</p>`;
+    showToast('Search failed', 'error');
   }
 });
 
-// Category select (genres)
-categorySelect?.addEventListener("change", (e) => {
-  const category = e.target.value;
-  if (category === "trending") {
-    loadShows("trending");
-  } else {
-    // TVMaze doesn't provide clean genre endpoints — use search by genre string
-    // update title and run loadShows which uses search endpoint for non-trending
-    loadShows(category);
-  }
+elements.categorySelect?.addEventListener("change", (e) => {
+  loadShows(e.target.value);
 });
 
-// Small helper
-function formatCategory(cat){
-  if(!cat) return '';
-  const map = {
+// Utilities
+function formatCategory(cat) {
+  if (!cat) return '';
+  const categories = {
     trending: "Trending",
     drama: "Drama",
     comedy: "Comedy",
@@ -285,19 +237,32 @@ function formatCategory(cat){
     romance: "Romance",
     thriller: "Thriller",
     horror: "Horror",
-    "science-fiction": "Sci-Fi",
-    "science-fiction": "Sci-Fi",
-    "sci": "Sci-Fi"
+    sci: "Sci-Fi"
   };
-  return map[cat] || (cat.charAt(0).toUpperCase() + cat.slice(1));
+  return categories[cat] || cat.charAt(0).toUpperCase() + cat.slice(1);
 }
 
 function escapeHtml(text = "") {
-  return String(text)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, m => map[m]);
 }
 
-// initial load
+// Initialize
 loadShows("trending");
+
+// Make sure handleSearch is defined and exported
+window.handleSearch = ({ query, category }) => {
+  console.log('handleSearch called with:', { query, category }); // Debug log
+  // Your existing search logic here
+};
+window.handleSearch = handleSearch;
+
+window.loaded = true;
+  // if exists
+

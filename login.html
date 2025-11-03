@@ -8,6 +8,13 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="bootstrap.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <style>
+        .password-requirements {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+    </style>
 </head>
 
 <body class="bg-gray-900 flex items-center justify-center min-h-screen">
@@ -17,16 +24,53 @@
 
 
         <form id="loginForm" class="space-y-4">
-            <input id="email" type="email" placeholder="Email" required class="w-full border px-4 py-2 rounded-md">
-            <input id="password" type="password" placeholder="Password" required
-                class="w-full border px-4 py-2 rounded-md">
-            <button type="submit" class="w-full py-2 rounded-md fw-bold" style="background-color: rgb(17,24,39);color: rgb(220,38,38);">Login</button>
+            <div class="space-y-2">
+                <input id="email" type="email" placeholder="Email" required
+                    class="w-full border px-4 py-2 rounded-md focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
+            </div>
+            <div class="space-y-2">
+                <input id="password" type="password" placeholder="Password" required
+                    class="w-full border px-4 py-2 rounded-md focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
+                <div class="password-requirements hidden">
+                    Password must contain:
+                    <ul class="list-disc list-inside mt-1">
+                        <li>At least 6 characters</li>
+                        <li>One uppercase letter</li>
+                        <li>One lowercase letter</li>
+                        <li>One number</li>
+                        <li>One special character</li>
+                    </ul>
+                </div>
+            </div>
+            <button type="submit" class="w-full py-2 rounded-md fw-bold transition-colors duration-200"
+                style="background-color: rgb(17,24,39);color: rgb(220,38,38);">Login</button>
         </form>
 
 
-        <p class="mt-4 text-sm">Don't have account? <a href="signup.html" class="text-green-600 text-decoration-none fw-bold text-black">Create one</a></p>
+        <div class="mt-4 text-center">
+            <div class="relative">
+                <hr class="border-gray-300">
+                <span
+                    class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-gray-500 text-sm">
+                    or
+                </span>
+            </div>
+    
+            <button id="googleSignIn"
+                class="mt-4 w-full flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-md hover:bg-gray-50 transition">
+                <img src="https://www.google.com/favicon.ico" alt="Google" class="w-5 h-5">
+                <span class="text-gray-700">Login with Google</span>
+            </button>
+        </div>
+        <p class="mt-4 text-sm">Don't have account? <a href="signup.html"
+                class="text-green-600 text-decoration-none fw-bold text-black">Create one</a></p>
     </div>
 
+    <!-- Add after the login form -->
+
+    <!-- Make sure Toastify loads before auth.js -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script type="module" src="auth.js"></script>
 </body>
-<script type="module" src="auth.js"></script>
+
 </html>

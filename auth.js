@@ -1,31 +1,12 @@
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-        signUp();
-    }
-})
-
-const toast = (message, bgColor, color, fontWeight, marginTop, borderRadius) => {
-    Toastify({
-        text: message,
-        duration: 1000,
-        // destination: "https://github.com/apvarun/toastify-js",
-        newWindow: true,
-        close: true,
-        gravity: "top", // `top` or `bottom`
-        position: "center", // `left`, `center` or `right`
-        stopOnFocus: true, // Prevents dismissing of toast on hover
-        style: {
-            background: bgColor,
-            color,
-            fontWeight,
-            marginTop,
-            borderRadius,
-        },
-        onClick: function () { } // Callback after click
-    }).showToast();
-}
-
-
+// ===============================
+//   GLOBAL: ENTER TO SUBMIT
+// ===============================
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    const signupForm = document.getElementById("signupForm");
+    if (signupForm) signupForm.requestSubmit();
+  }
+});
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import {
@@ -33,11 +14,11 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  sendEmailVerification,
   GoogleAuthProvider,
   signInWithPopup,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyCMI6bSOWfI_CpCeIY3IMx9edB5FhQvcBQ",
@@ -48,166 +29,215 @@ const firebaseConfig = {
   appId: "1:420605724397:web:6c1e4f3d7f0143f1ceaee4"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
-// Helper: show alert and optionally log
-function notify(message, type = 'info') {
-  // type can be 'info' | 'success' | 'error'
-  // adapt this to custom UI later; for now use alert()
-  alert(message);
-  console[type === 'error' ? 'error' : 'log'](message);
+function getGravatar(email) {
+  const hash = CryptoJS.MD5(email.trim().toLowerCase()).toString();
+  return `https://www.gravatar.com/avatar/${hash}?d=identicon`;
 }
 
-// SIGN UP (Firebase)
-const signupForm = document.getElementById('signupForm');
+function showToast(message, type = "info") {
+  const colors = {
+    success: "#10b981",
+    error: "#ef4444",
+    warning: "linear-gradient(to right, #f7b733, #fc4a1a)",
+    info: "linear-gradient(to right, #2193b0, #6dd5ed)"
+  };
+
+  Toastify({
+    text: message,
+    duration: 4000,
+    gravity: "top",
+    position: "center",
+    style: {
+      background: colors[type],
+      color: "white",
+      padding: "10px 20px",
+      borderRadius: "8px"
+    }
+  }).showToast();
+}
+
+// ===============================
+//     PASSWORD VALIDATION
+// ===============================
+function validatePassword(password) {
+  const rules = {
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+    number: /[0-9]/.test(password),
+    length: password.length >= 6
+  };
+
+  const failed = Object.entries(rules)
+    .filter(([_, pass]) => !pass)
+    .map(([rule]) => rule);
+
+  return {
+    valid: failed.length === 0,
+    failed
+  };
+}
+
+// ===============================
+//        SAVE USER PROFILE
+// ===============================
+function saveUserProfile(email, name, photo) {
+  const profiles = JSON.parse(localStorage.getItem("userProfiles") || "{}");
+
+  profiles[email] = {
+    name,
+    photo
+  };
+
+  localStorage.setItem("userProfiles", JSON.stringify(profiles));
+
+  // Save current session data
+  localStorage.setItem("loggedInUser", email);
+  localStorage.setItem("userName", name);
+  localStorage.setItem("userPhoto", photo);
+}
+
+// ===============================
+//          SIGNUP
+// ===============================
+async function handleSignUp(email, password, name) {
+  const check = validatePassword(password);
+
+  if (!check.valid) {
+    const reasons = check.failed.join(", ");
+    showToast(`Password is missing: ${reasons}`, "warning");
+    return;
+  }
+
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+
+    const photo = getGravatar(email);
+
+    saveUserProfile(email, name, photo);
+
+    showToast("Account created successfully!", "success");
+    setTimeout(() => (window.location.href = "login.html"), 1200);
+
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || "Signup failed", "error");
+  }
+}
+
+// ===============================
+//          LOGIN
+// ===============================
+async function handleSignIn(email, password) {
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+
+    const profiles = JSON.parse(localStorage.getItem("userProfiles") || "{}");
+
+    const name = profiles[email]?.name || email.split("@")[0];
+    const photo = profiles[email]?.photo || getGravatar(email);
+
+    saveUserProfile(email, name, photo);
+
+    showToast("Login successful!", "success");
+    setTimeout(() => (window.location.href = "dashboard.html"), 900);
+
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || "Login failed", "error");
+  }
+}
+
+// ===============================
+//       GOOGLE SIGN-IN
+// ===============================
+async function handleGoogleSignIn(isSignup = false) {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+
+    const email = result.user?.email;
+    const name = result.user?.displayName || email.split("@")[0];
+    const photo = result.user?.photoURL || getGravatar(email);
+
+    saveUserProfile(email, name, photo);
+
+    if (isSignup) {
+      showToast("Account created successfully!", "success");
+      setTimeout(() => (window.location.href = "login.html"), 1200);
+    } else {
+      showToast("Login successful!", "success");
+      setTimeout(() => (window.location.href = "dashboard.html"), 1200);
+    }
+
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || "Google sign-in failed", "error");
+  }
+}
+
+// Update the event listeners to pass the correct parameter
+["googleSignUp", "googleSignIn"].forEach((id) => {
+  const btn = document.getElementById(id);
+  if (btn) {
+    // Pass true if it's signup, false if it's signin
+    btn.addEventListener("click", () => handleGoogleSignIn(id === "googleSignUp"));
+  }
+});
+
+// ===============================
+//      FORM SUBMISSION
+// ===============================
+const signupForm = document.getElementById("signupForm");
 if (signupForm) {
-  signupForm.addEventListener('submit', async (e) => {
+  signupForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    const emailEl = document.getElementById('signupEmail');
-    const passEl = document.getElementById('signupPassword');
-    const nameEl = document.getElementById('signupName');
-
-    const email = emailEl?.value?.trim() || '';
-    const password = passEl?.value || '';
-    const name = nameEl?.value?.trim() || '';
-
-    if (!email || !password) {
-      notify('Please enter email and password', 'error');
-      return;
-    }
-
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      notify('Signup successful! Redirecting to login page...', 'success');
-
-      // Store email for convenience
-      localStorage.setItem('signedUpUser', email);
-
-      // Redirect to login page
-      setTimeout(() => window.location.href = 'login.html', 700);
-    } catch (err) {
-      notify(err?.message || 'Signup failed', 'error');
-      console.error(err);
-    }
+    handleSignUp(
+      document.getElementById("signupEmail").value.trim(),
+      document.getElementById("signupPassword").value.trim(),
+      document.getElementById("signupName").value.trim()
+    );
   });
 }
 
-// GOOGLE SIGNUP (popup)
-const googleSignUpBtn = document.getElementById('googleSignUp');
-if (googleSignUpBtn) {
-  googleSignUpBtn.addEventListener('click', async (e) => {
-    e.preventDefault();
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      // User signed in with Google
-      localStorage.setItem('loggedInUser', result.user?.email || '');
-      notify('Google signup/signin successful. Redirecting...', 'success');
-      setTimeout(() => window.location.href = 'dashboard.html', 700);
-    } catch (err) {
-      notify(err?.message || 'Google sign-in failed', 'error');
-      console.error(err);
-    }
-  });
-}
-
-// LOGIN (Firebase) -- replace existing loginForm handler with this
-const loginForm = document.getElementById('loginForm');
+const loginForm = document.getElementById("loginForm");
 if (loginForm) {
-  loginForm.addEventListener('submit', async (e) => {
+  loginForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    const email = (document.getElementById('email')?.value || '').trim();
-    const password = document.getElementById('password')?.value || '';
-
-    if (!email || !password) {
-      notify('Please enter email and password', 'error');
-      return;
-    }
-
-    try {
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-      localStorage.setItem('loggedInUser', email);
-      notify('Login successful! Redirecting...', 'success');
-      setTimeout(() => window.location.href = 'dashboard.html', 600);
-    } catch (err) {
-      notify(err?.message || 'Login failed', 'error');
-      console.error(err);
-    }
+    handleSignIn(
+      document.getElementById("email").value.trim(),
+      document.getElementById("password").value.trim()
+    );
   });
 }
 
-// LOGIN button IDs used in some pages (preserve older IDs)
-// Replace existing signInFormEl handler with this (if present in file)
-const signInFormEl = document.getElementById('signInFormEl');
-if (signInFormEl) {
-  signInFormEl.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = (document.getElementById('signinEmail')?.value || '').trim();
-    const password = document.getElementById('signinPassword')?.value || '';
-
-    if (!email || !password) {
-      notify('Please enter email and password', 'error');
-      return;
-    }
-
-    try {
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-      localStorage.setItem('loggedInUser', email);
-      notify('Sign in successful. Redirecting...', 'success');
-      setTimeout(() => window.location.href = 'dashboard.html', 700);
-    } catch (err) {
-      notify(err?.message || 'Sign in failed', 'error');
-      console.error(err);
-    }
-  });
-}
-
-// Google sign-in buttons (alternative IDs)
-const googleSignInBtn = document.getElementById('googleSignIn');
-if (googleSignInBtn) {
-  googleSignInBtn.addEventListener('click', async (e) => {
-    e.preventDefault();
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      localStorage.setItem('loggedInUser', result.user?.email || '');
-      notify('Google sign-in successful. Redirecting...', 'success');
-      setTimeout(() => window.location.href = 'dashboard.html', 700);
-    } catch (err) {
-      notify(err?.message || 'Google sign-in failed', 'error');
-      console.error(err);
-    }
-  });
-}
-
-// LOGOUT
-window.logout = async function () {
+// ===============================
+//          LOGOUT
+// ===============================
+window.logout = async () => {
   try {
     await signOut(auth);
-    localStorage.removeItem('loggedInUser');
-    notify('Logged out successfully', 'success');
-    window.location.href = 'login.html';
+    localStorage.removeItem("loggedInUser");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userPhoto");
+    showToast("Logged out successfully", "success");
+    setTimeout(() => (window.location.href = "login.html"), 800);
   } catch (err) {
-    notify('Logout failed', 'error');
     console.error(err);
+    showToast("Logout failed", "error");
   }
 };
 
-// Protect pages: if <body data-protected="true"> redirect to login when no auth
-if (document.body?.dataset?.protected === "true") {
-  onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      // No user signed in -> redirect to login
-      localStorage.removeItem('loggedInUser');
-      window.location.href = 'login.html';
-    }
-  });
-} else {
-  // If not protected, keep a lightweight onAuthStateChanged for convenienceateChanged for convenience
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      // User is signed in, you can update UI or perform actions as needed      // User is signed in, you can update UI or perform actions as needed
-      // For example, you might want to fetch and display user datae, you might want to fetch and display user data
-    }
-  });
-}
+// ===============================
+//      PROTECTED PAGE CHECK
+// ===============================
+onAuthStateChanged(auth, (user) => {
+  if (document.body.dataset.protected === "true" && !user) {
+    localStorage.clear();
+    window.location.href = "login.html";
+  }
+});
