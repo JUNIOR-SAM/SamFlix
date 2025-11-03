@@ -13,7 +13,8 @@ const elements = {
   modalContent: document.getElementById("modalContent"),
   modalClose: document.getElementById("modalClose"),
   overlaySearch: document.getElementById("overlaySearch"),
-  mobileSearchBtn: document.getElementById("mobileSearchBtn")
+  mobileSearchBtn: document.getElementById("mobileSearchBtn"),
+  mobileCategorySelect: document.getElementById("mobileCategorySelect")
 };
 
 // Favorites Management
@@ -223,6 +224,10 @@ elements.searchBtn?.addEventListener("click", async () => {
 });
 
 elements.categorySelect?.addEventListener("change", (e) => {
+  loadShows(e.target.value);
+});
+
+elements.mobileCategorySelect?.addEventListener("change", (e) => {
   loadShows(e.target.value);
 });
 

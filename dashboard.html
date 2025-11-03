@@ -186,9 +186,20 @@
         <button id="closeMobileMenu" class="text-gray-300">Close</button>
       </div>
       <nav class="space-y-2">
+        <select id="mobileCategorySelect" class="w-full px-3 py-2 bg-gray-700 text-white rounded-md mb-2">
+          <option value="trending">🔥 Trending</option>
+          <option value="drama">🎭 Drama</option>
+          <option value="comedy">😂 Comedy</option>
+          <option value="action">💥 Action</option>
+          <option value="romance">❤️ Romance</option>
+          <option value="thriller">🔪 Thriller</option>
+          <option value="horror">👻 Horror</option>
+          <option value="sci">🧠 Sci-Fi</option>
+        </select>
         <a href="favorites.html" class="block px-3 py-2 text-gray-200 hover:bg-gray-700 rounded">❤️ Favorites</a>
-        <button id="mobileMenuLogout" class="w-full text-left px-3 py-2 text-gray-200 hover:bg-gray-700 rounded">🚪
-          Logout</button>
+        <button id="mobileMenuLogout" class="w-full text-left px-3 py-2 text-gray-200 hover:bg-gray-700 rounded">
+          🚪 Logout
+        </button>
       </nav>
     </div>
   </div>
@@ -380,6 +391,34 @@
 
       mobileSearchBtn?.addEventListener('click', performSearch);
 
+      // Add this inside your existing script's event listener section
+      const mobileCategorySelect = document.getElementById('mobileCategorySelect');
+      const desktopCategorySelect = document.getElementById('categorySelect');
+
+      // Sync the mobile category with desktop
+      mobileCategorySelect?.addEventListener('change', (e) => {
+        const selectedValue = e.target.value;
+
+        // Update desktop select if it exists
+        if (desktopCategorySelect) {
+          desktopCategorySelect.value = selectedValue;
+        }
+
+        // Trigger the category change
+        if (typeof window.loadShows === 'function') {
+          window.loadShows(selectedValue);
+        }
+
+        // Close the mobile menu
+        closeMenu();
+      });
+
+      // Keep mobile and desktop selections in sync
+      desktopCategorySelect?.addEventListener('change', (e) => {
+        if (mobileCategorySelect) {
+          mobileCategorySelect.value = e.target.value;
+        }
+      });
     })();
 
     window.handleSearch = handleSearch;
