@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -143,8 +144,10 @@
               <div id="mobileName" class="text-sm font-medium">User</div>
               <div id="mobileEmail" class="text-xs text-gray-400 truncate"></div>
             </div>
-            <a href="favorites.html" class="block px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 rounded">❤️ Favorites</a>
-            <button id="mobileLogout" class="w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 rounded">🚪 Logout</button>
+            <a href="favorites.html" class="block px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 rounded">❤️
+              Favorites</a>
+            <button id="mobileLogout"
+              class="w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 rounded">🚪 Logout</button>
           </div>
         </div>
 
@@ -161,7 +164,8 @@
   <div id="searchOverlay" class="search-overlay">
     <div class="max-w-6xl mx-auto px-4">
       <div class="flex items-center gap-2">
-        <input id="overlaySearch" type="text" placeholder="Search movies..." class="flex-1 px-4 py-2 rounded bg-gray-700 text-white">
+        <input id="overlaySearch" type="text" placeholder="Search movies..."
+          class="flex-1 px-4 py-2 rounded bg-gray-700 text-white">
         <button id="mobileSearchBtn" class="bg-red-600 px-4 py-2 rounded">Search</button>
         <button id="closeSearch" class="text-gray-300 px-2">Close</button>
       </div>
@@ -183,7 +187,8 @@
       </div>
       <nav class="space-y-2">
         <a href="favorites.html" class="block px-3 py-2 text-gray-200 hover:bg-gray-700 rounded">❤️ Favorites</a>
-        <button id="mobileMenuLogout" class="w-full text-left px-3 py-2 text-gray-200 hover:bg-gray-700 rounded">🚪 Logout</button>
+        <button id="mobileMenuLogout" class="w-full text-left px-3 py-2 text-gray-200 hover:bg-gray-700 rounded">🚪
+          Logout</button>
       </nav>
     </div>
   </div>
@@ -320,23 +325,59 @@
       closeSearch?.addEventListener('click', () => { searchOverlay.classList.remove('active'); });
 
       const performSearch = () => {
-        const q = overlaySearch?.value?.trim() || '';
-        if (!q) return;
-        // call handleSearch from your script.js (we left that global in your script)
-        if (typeof window.handleSearch === 'function') {
-          window.handleSearch({ query: q, category: 'trending' });
-        } else {
-          // fallback: if handleSearch missing, trigger the visible search button click
-          const desktopInput = document.getElementById('searchInput');
-          const desktopBtn = document.getElementById('searchBtn');
-          if (desktopInput) desktopInput.value = q;
-          if (desktopBtn) desktopBtn.click();
+        const query = overlaySearch?.value?.trim();
+        if (!query) return;
+
+        // Update the section title
+        const sectionTitle = document.getElementById('sectionTitle');
+        if (sectionTitle) {
+          sectionTitle.textContent = `🔍 Results for "${query}"`;
         }
+
+        // Update movie container with loading state
+        const movieContainer = document.getElementById('movieContainer');
+        if (movieContainer) {
+          movieContainer.innerHTML = '<p class="text-gray-400">Searching...</p>';
+        }
+
+        // Make the API call
+        fetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(query)}`)
+          .then(response => response.json())
+          .then(data => {
+            // Process the results
+            const shows = data.map(item => item.show);
+            if (typeof window.displayShows === 'function') {
+              window.displayShows(shows);
+            } else {
+              // Fallback if displayShows isn't available
+              movieContainer.innerHTML = shows.length ?
+                shows.map(show => `
+                  <div class="bg-gray-800 rounded-lg overflow-hidden">
+                    <img src="${show.image?.medium || 'https://via.placeholder.com/300x420?text=No+Image'}" 
+                         alt="${show.name}" class="w-full">
+                    <div class="p-4">
+                      <h3 class="font-bold">${show.name}</h3>
+                      <p class="text-gray-400">${show.genres?.join(', ') || 'No Genre'}</p>
+                    </div>
+                  </div>
+                `).join('')
+                : '<p class="text-gray-400">No results found</p>';
+            }
+          })
+          .catch(error => {
+            console.error('Search failed:', error);
+            movieContainer.innerHTML = '<p class="text-red-500">Search failed. Please try again.</p>';
+          });
+
+        // Close the search overlay
         searchOverlay.classList.remove('active');
-        if (overlaySearch) overlaySearch.value = '';
+        overlaySearch.value = '';
       };
 
-      overlaySearch?.addEventListener('keyup', (e) => { if (e.key === 'Enter') performSearch(); });
+      overlaySearch?.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') performSearch();
+      });
+
       mobileSearchBtn?.addEventListener('click', performSearch);
 
     })();
@@ -345,4 +386,5 @@
 
   </script>
 </body>
+
 </html>
