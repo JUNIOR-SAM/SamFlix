@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,19 +8,21 @@
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <style>
     /* keep desktop layout unchanged */
-    .user-avatar {
+    .user-photo {
       width: 36px;
       height: 36px;
       border-radius: 9999px;
       overflow: hidden;
-      display: inline-block;
-      background: #374151;
-      color: #fff;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
+      background: #374151;
+      color: #fff;
       font-weight: 600;
+      font-size: 14px;
     }
+
+    .user-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
     /* mobile dropdown */
     .mobile-dropdown {
@@ -37,9 +38,7 @@
       z-index: 60;
     }
 
-    .mobile-dropdown.active {
-      display: block;
-    }
+    .mobile-dropdown.active { display: block; }
 
     /* mobile search overlay */
     .search-overlay {
@@ -53,9 +52,7 @@
       z-index: 70;
     }
 
-    .search-overlay.active {
-      top: 0;
-    }
+    .search-overlay.active { top: 0; }
 
     /* mobile menu (slide) */
     .mobile-menu {
@@ -63,15 +60,13 @@
       right: -100%;
       top: 0;
       bottom: 0;
-      width: 260px;
+      width: 433px; /* default width; change as you like */
       background: #111827;
       transition: right .25s ease;
       z-index: 65;
     }
 
-    .mobile-menu.active {
-      right: 0;
-    }
+    .mobile-menu.active { right: 0; }
 
     .backdrop {
       position: fixed;
@@ -87,10 +82,16 @@
       opacity: 1;
       pointer-events: auto;
     }
+
+    /* modal styling (scrollable) */
+    #modal .modal-panel {
+      max-height: 90vh;
+      overflow-y: auto;
+    }
   </style>
 </head>
 
-<body class="bg-gray-900 text-white min-h-screen">
+<body class="bg-gray-900 text-white min-h-screen" data-page="dashboard">
   <!-- Header (desktop layout kept intact) -->
   <header class="bg-gray-800 py-3 shadow-md sticky top-0 z-30">
     <div class="max-w-6xl mx-auto px-4 flex items-center justify-between gap-4">
@@ -118,9 +119,8 @@
       <div class="hidden md:flex items-center gap-4">
         <a href="favorites.html" class="text-gray-300 hover:text-white">❤️ Favorites</a>
         <div class="relative">
-          <button id="userMenuBtn" class="flex items-center gap-2" aria-haspopup="true" aria-expanded="false">
-            <div id="userAvatar" class="user-avatar">U</div>
-          </button>
+          <!-- profile photo for desktop (uses localStorage.userPhoto OR initial fallback) -->
+          <div id="desktopUserPhoto" class="user-photo" title="Profile"></div>
         </div>
       </div>
 
@@ -133,23 +133,8 @@
           </svg>
         </button>
 
-        <!-- avatar + dropdown inside toggle bar -->
-        <div class="relative">
-          <button id="mobileAvatarBtn" class="flex items-center" aria-haspopup="true" aria-expanded="false">
-            <div id="mobileUserAvatar" class="user-avatar">U</div>
-          </button>
-
-          <div id="mobileDropdown" class="mobile-dropdown" role="menu" aria-hidden="true">
-            <div class="px-3 py-2 border-b border-gray-700">
-              <div id="mobileName" class="text-sm font-medium">User</div>
-              <div id="mobileEmail" class="text-xs text-gray-400 truncate"></div>
-            </div>
-            <a href="favorites.html" class="block px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 rounded">❤️
-              Favorites</a>
-            <button id="mobileLogout"
-              class="w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 rounded">🚪 Logout</button>
-          </div>
-        </div>
+        <!-- profile photo shown between search icon & menu toggle on mobile -->
+        <div id="mobileUserPhoto" class="user-photo"></div>
 
         <button id="mobileMenuBtn" class="text-gray-300 hover:text-white" aria-label="Open menu">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -173,11 +158,11 @@
   </div>
 
   <!-- Mobile slide menu -->
-  <div id="mobileMenu" class="mobile-menu">
+  <div id="mobileMenu" class="mobile-menu" aria-hidden="true">
     <div class="p-4">
       <div class="flex items-center justify-between mb-6">
         <div class="flex items-center gap-3">
-          <div id="mobileMenuAvatar" class="user-avatar">U</div>
+          <div id="mobileMenuPhoto" class="user-photo"></div>
           <div>
             <div id="mobileMenuName" class="font-medium">User</div>
             <div id="mobileMenuEmail" class="text-sm text-gray-400 truncate"></div>
@@ -185,6 +170,7 @@
         </div>
         <button id="closeMobileMenu" class="text-gray-300">Close</button>
       </div>
+
       <nav class="space-y-2">
         <select id="mobileCategorySelect" class="w-full px-3 py-2 bg-gray-700 text-white rounded-md mb-2">
           <option value="trending">🔥 Trending</option>
@@ -196,10 +182,9 @@
           <option value="horror">👻 Horror</option>
           <option value="sci">🧠 Sci-Fi</option>
         </select>
+
         <a href="favorites.html" class="block px-3 py-2 text-gray-200 hover:bg-gray-700 rounded">❤️ Favorites</a>
-        <button id="mobileMenuLogout" class="w-full text-left px-3 py-2 text-gray-200 hover:bg-gray-700 rounded">
-          🚪 Logout
-        </button>
+        <button id="mobileMenuLogout" class="w-full text-left px-3 py-2 text-gray-200 hover:bg-gray-700 rounded">🚪 Logout</button>
       </nav>
     </div>
   </div>
@@ -207,223 +192,168 @@
   <div id="backdrop" class="backdrop"></div>
 
   <!-- Main content (kept simple; desktop layout unchanged) -->
-  <main class="max-w-6xl mx-auto mt-6 px-4">
-    <div class="flex items-center justify-between mb-6">
-      <h2 id="sectionTitle" class="text-xl font-semibold">🔥 Trending Movies</h2>
+  <main class="max-w-6xl mx-auto mt-6 px-6 ">
+    <div class="flex items-center justify-between mb-6 gap-5">
+      <h2 id="sectionTitle" class="text-x font-semibold">🔥 Trending Movies</h2>
       <p id="userGreeting" class="text-gray-300 text-sm"></p>
     </div>
     <div id="movieContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
   </main>
 
+  <!-- Modal (details) -->
+  <div id="modal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center p-4 z-50">
+    <div class="modal-panel bg-gray-800 rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
+      <button id="modalClose" class="absolute top-4 right-4 text-gray-400 hover:text-white" aria-label="Close">✕</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <footer class="text-center py-6 text-gray-400 text-sm border-t border-gray-700 mt-8">
+    © 2025 SamFlix | Built by <span class="text-red-500 font-semibold">Samuel</span> 🍿
+  </footer>
+
   <!-- scripts: Toastify -->
   <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-
-  <!-- load CryptoJS before avatar code so MD5 is available -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
   <!-- load your app logic (unchanged script.js you gave me) -->
   <script src="script.js"></script>
 
-  <!-- Avatar + mobile wiring (runs after script.js and CryptoJS are loaded) -->
+  <!-- Small wiring for profile photo, search overlay, mobile menu, modal close, and syncing selects -->
   <script>
     (function () {
-      // small helper: read localStorage (safe)
+      // localStorage keys used by your auth logic:
       const userEmail = localStorage.getItem('loggedInUser') || '';
       const userName = localStorage.getItem('userName') || (userEmail ? userEmail.split('@')[0] : 'User');
+      const userPhoto = localStorage.getItem('userPhoto') || null; // <-- user requested key
 
-      // MD5 via CryptoJS
-      function md5(str) {
-        if (!str) return '';
-        return CryptoJS.MD5(str.trim().toLowerCase()).toString();
-      }
-
-      function getGravatar(email) {
-        if (!email) return null;
-        return `https://www.gravatar.com/avatar/${md5(email)}?d=mp&s=200`;
-      }
-
-      function applyAvatar(el, name, email) {
+      // helper: set a user-photo element (image or initial)
+      function setUserPhoto(el, photoUrl, name) {
         if (!el) return;
-        const url = getGravatar(email);
-        if (!url) {
-          el.textContent = name.charAt(0).toUpperCase();
-          return;
-        }
-        const img = new Image();
-        img.src = url;
-        img.className = 'w-full h-full object-cover';
-        img.onload = () => {
-          el.innerHTML = '';
+        el.innerHTML = '';
+        if (photoUrl) {
+          const img = new Image();
+          img.src = photoUrl;
+          img.alt = name || 'Profile';
+          img.className = 'block w-full h-full object-cover';
+          // if image fails to load, fallback to initial
+          img.onerror = () => {
+            el.innerHTML = (name && name.charAt(0).toUpperCase()) || '?';
+          };
           el.appendChild(img);
-        };
-        img.onerror = () => {
-          el.textContent = name.charAt(0).toUpperCase();
-        };
+        } else {
+          el.textContent = (name && name.charAt(0).toUpperCase()) || '?';
+        }
       }
 
-      // set avatars for the three spots
-      applyAvatar(document.getElementById('userAvatar'), userName, userEmail);
-      applyAvatar(document.getElementById('mobileUserAvatar'), userName, userEmail);
-      applyAvatar(document.getElementById('mobileMenuAvatar'), userName, userEmail);
+      // populate photo on desktop, mobile, and slide menu
+      setUserPhoto(document.getElementById('desktopUserPhoto'), userPhoto, userName);
+      setUserPhoto(document.getElementById('mobileUserPhoto'), userPhoto, userName);
+      setUserPhoto(document.getElementById('mobileMenuPhoto'), userPhoto, userName);
 
-      // populate mobile name/email places
-      const setText = (id, txt) => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = txt || '';
-      };
-      setText('mobileName', userName);
-      setText('mobileEmail', userEmail);
-      setText('mobileMenuName', userName);
-      setText('mobileMenuEmail', userEmail);
+      // populate slide menu name & email
+      const setTextIf = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt || ''; };
+      setTextIf('mobileMenuName', userName);
+      setTextIf('mobileMenuEmail', userEmail);
 
       // greeting
       const greetEl = document.getElementById('userGreeting');
       if (greetEl) {
         const hr = new Date().getHours();
         const greet = hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';
-        greetEl.textContent = `${greet}, ${userName}`;
+        // small styling inline without changing layout
+        greetEl.innerHTML = `<span class="text-gray-300">${greet},</span> <span class="text-red-500 font-semibold">${userName}</span>`;
       }
 
-      // mobile dropdown toggle
-      const mobileAvatarBtn = document.getElementById('mobileAvatarBtn');
-      const mobileDropdown = document.getElementById('mobileDropdown');
-      mobileAvatarBtn?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        mobileDropdown.classList.toggle('active');
-      });
-      document.addEventListener('click', (e) => {
-        if (!mobileDropdown) return;
-        if (!mobileDropdown.contains(e.target) && !mobileAvatarBtn.contains(e.target)) {
-          mobileDropdown.classList.remove('active');
-        }
-      });
-
-      // wire logout buttons
-      ['mobileLogout', 'mobileMenuLogout'].forEach(id => {
-        const btn = document.getElementById(id);
-        if (btn) btn.addEventListener('click', () => {
-          if (typeof window.logout === 'function') {
-            window.logout();
-          } else {
-            localStorage.removeItem('loggedInUser');
-            localStorage.removeItem('userName');
-            window.location.href = 'login.html';
-          }
-        });
-      });
-
-      // mobile slide menu toggle
+      // mobile menu toggle
       const mobileMenuBtn = document.getElementById('mobileMenuBtn');
       const mobileMenu = document.getElementById('mobileMenu');
       const closeMobileMenu = document.getElementById('closeMobileMenu');
       const backdrop = document.getElementById('backdrop');
 
-      const openMenu = () => { mobileMenu.classList.add('active'); backdrop.classList.add('active'); };
-      const closeMenu = () => { mobileMenu.classList.remove('active'); backdrop.classList.remove('active'); };
+      function openMenu() { mobileMenu.classList.add('active'); backdrop.classList.add('active'); mobileMenu.setAttribute('aria-hidden','false'); }
+      function closeMenuFn() { mobileMenu.classList.remove('active'); backdrop.classList.remove('active'); mobileMenu.setAttribute('aria-hidden','true'); }
 
       mobileMenuBtn?.addEventListener('click', openMenu);
-      closeMobileMenu?.addEventListener('click', closeMenu);
-      backdrop?.addEventListener('click', closeMenu);
+      closeMobileMenu?.addEventListener('click', closeMenuFn);
+      backdrop?.addEventListener('click', closeMenuFn);
 
-      // mobile search overlay wiring
+      // wire mobile category select to desktop loadShows (if available)
+      const mobileCategorySelect = document.getElementById('mobileCategorySelect');
+      const desktopCategorySelect = document.getElementById('categorySelect');
+      mobileCategorySelect?.addEventListener('change', (e) => {
+        const val = e.target.value;
+        if (desktopCategorySelect) desktopCategorySelect.value = val;
+        if (typeof window.loadShows === 'function') window.loadShows(val);
+        closeMenuFn();
+      });
+      desktopCategorySelect?.addEventListener('change', (e) => {
+        if (mobileCategorySelect) mobileCategorySelect.value = e.target.value;
+      });
+
+      // Search overlay wiring (mobile)
       const searchToggle = document.getElementById('searchToggle');
       const searchOverlay = document.getElementById('searchOverlay');
       const closeSearch = document.getElementById('closeSearch');
       const overlaySearch = document.getElementById('overlaySearch');
       const mobileSearchBtn = document.getElementById('mobileSearchBtn');
+      const desktopSearchInput = document.getElementById('searchInput');
+      const desktopSearchBtn = document.getElementById('searchBtn');
 
-      searchToggle?.addEventListener('click', () => { searchOverlay.classList.add('active'); overlaySearch.focus(); });
-      closeSearch?.addEventListener('click', () => { searchOverlay.classList.remove('active'); });
+      function openSearchOverlay() { searchOverlay.classList.add('active'); overlaySearch?.focus(); }
+      function closeSearchOverlay() { searchOverlay.classList.remove('active'); }
 
-      const performSearch = () => {
-        const query = overlaySearch?.value?.trim();
-        if (!query) return;
+      searchToggle?.addEventListener('click', openSearchOverlay);
+      closeSearch?.addEventListener('click', closeSearchOverlay);
 
-        // Update the section title
+      // performSearch: prefer window.handleSearch (your script.js provides it). fallback -> click desktopSearchBtn
+      function performSearchFrom(q) {
+        if (!q) return;
+        // update UI title if present
         const sectionTitle = document.getElementById('sectionTitle');
-        if (sectionTitle) {
-          sectionTitle.textContent = `🔍 Results for "${query}"`;
+        if (sectionTitle) sectionTitle.textContent = `🔍 Results for "${q}"`;
+
+        // If your global handler exists use it
+        if (typeof window.handleSearch === 'function') {
+          try {
+            window.handleSearch({ query: q, category: 'trending' });
+            return;
+          } catch (err) {
+            console.warn('window.handleSearch threw:', err);
+            // fallback below
+          }
         }
 
-        // Update movie container with loading state
-        const movieContainer = document.getElementById('movieContainer');
-        if (movieContainer) {
-          movieContainer.innerHTML = '<p class="text-gray-400">Searching...</p>';
-        }
+        // Fallback: set desktop input value and trigger desktopSearchBtn click (script.js listens)
+        if (desktopSearchInput) desktopSearchInput.value = q;
+        if (desktopSearchBtn) desktopSearchBtn.click();
+      }
 
-        // Make the API call
-        fetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(query)}`)
-          .then(response => response.json())
-          .then(data => {
-            // Process the results
-            const shows = data.map(item => item.show);
-            if (typeof window.displayShows === 'function') {
-              window.displayShows(shows);
-            } else {
-              // Fallback if displayShows isn't available
-              movieContainer.innerHTML = shows.length ?
-                shows.map(show => `
-                  <div class="bg-gray-800 rounded-lg overflow-hidden">
-                    <img src="${show.image?.medium || 'https://via.placeholder.com/300x420?text=No+Image'}" 
-                         alt="${show.name}" class="w-full">
-                    <div class="p-4">
-                      <h3 class="font-bold">${show.name}</h3>
-                      <p class="text-gray-400">${show.genres?.join(', ') || 'No Genre'}</p>
-                    </div>
-                  </div>
-                `).join('')
-                : '<p class="text-gray-400">No results found</p>';
-            }
-          })
-          .catch(error => {
-            console.error('Search failed:', error);
-            movieContainer.innerHTML = '<p class="text-red-500">Search failed. Please try again.</p>';
-          });
+      overlaySearch?.addEventListener('keyup', (e) => { if (e.key === 'Enter') { performSearchFrom(overlaySearch.value.trim()); closeSearchOverlay(); overlaySearch.value = ''; } });
+      mobileSearchBtn?.addEventListener('click', () => { performSearchFrom(overlaySearch.value.trim()); closeSearchOverlay(); overlaySearch.value = ''; });
 
-        // Close the search overlay
-        searchOverlay.classList.remove('active');
-        overlaySearch.value = '';
+      // keep desktop search button working (in case script.js overwrote)
+      document.getElementById('searchBtn')?.addEventListener('click', (e) => {
+        // if script.js already handles it, this will still call it; no-op here
+      });
+
+      // Modal close wiring
+      const modal = document.getElementById('modal');
+      const modalClose = document.getElementById('modalClose');
+      modalClose?.addEventListener('click', () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      });
+      modal?.addEventListener('click', (ev) => { if (ev.target === modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); } });
+
+      // Expose helper for other scripts to open modal with HTML content
+      window.openMovieModal = function (html) {
+        const content = document.getElementById('modalContent');
+        if (content) content.innerHTML = html || '';
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
       };
 
-      overlaySearch?.addEventListener('keyup', (e) => {
-        if (e.key === 'Enter') performSearch();
-      });
-
-      mobileSearchBtn?.addEventListener('click', performSearch);
-
-      // Add this inside your existing script's event listener section
-      const mobileCategorySelect = document.getElementById('mobileCategorySelect');
-      const desktopCategorySelect = document.getElementById('categorySelect');
-
-      // Sync the mobile category with desktop
-      mobileCategorySelect?.addEventListener('change', (e) => {
-        const selectedValue = e.target.value;
-
-        // Update desktop select if it exists
-        if (desktopCategorySelect) {
-          desktopCategorySelect.value = selectedValue;
-        }
-
-        // Trigger the category change
-        if (typeof window.loadShows === 'function') {
-          window.loadShows(selectedValue);
-        }
-
-        // Close the mobile menu
-        closeMenu();
-      });
-
-      // Keep mobile and desktop selections in sync
-      desktopCategorySelect?.addEventListener('change', (e) => {
-        if (mobileCategorySelect) {
-          mobileCategorySelect.value = e.target.value;
-        }
-      });
     })();
-
-    window.handleSearch = handleSearch;
-
   </script>
 </body>
-
 </html>
