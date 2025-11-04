@@ -117,10 +117,6 @@ async function handleSignUp(email, password, name) {
   try {
     await createUserWithEmailAndPassword(auth, email, password);
 
-    const photo = getGravatar(email);
-
-    saveUserProfile(email, name, photo);
-
     showToast("Account created successfully!", "success");
     setTimeout(() => (window.location.href = "login.html"), 1200);
 
@@ -140,9 +136,6 @@ async function handleSignIn(email, password) {
     const profiles = JSON.parse(localStorage.getItem("userProfiles") || "{}");
 
     const name = profiles[email]?.name || email.split("@")[0];
-    const photo = profiles[email]?.photo || getGravatar(email);
-
-    saveUserProfile(email, name, photo);
 
     showToast("Login successful!", "success");
     setTimeout(() => (window.location.href = "dashboard.html"), 900);
@@ -241,3 +234,4 @@ onAuthStateChanged(auth, (user) => {
     window.location.href = "login.html";
   }
 });
+
