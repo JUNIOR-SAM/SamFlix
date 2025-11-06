@@ -19,7 +19,9 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
-
+// ===============================
+// FIREBASE CONFIG
+// ===============================
 const firebaseConfig = {
   apiKey: "AIzaSyCMI6bSOWfI_CpCeIY3IMx9edB5FhQvcBQ",
   authDomain: "samflix-4f3df.firebaseapp.com",
@@ -29,40 +31,36 @@ const firebaseConfig = {
   appId: "1:420605724397:web:6c1e4f3d7f0143f1ceaee4"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
-function getGravatar(email) {
-  const hash = CryptoJS.MD5(email.trim().toLowerCase()).toString();
-  return `https://www.gravatar.com/avatar/${hash}?d=identicon`;
-}
-
+// ===============================
+// SHOW TOAST
+// ===============================
 function showToast(message, type = "info") {
   const colors = {
     success: "#10b981",
     error: "#ef4444",
-    warning: "linear-gradient(to right, #f7b733, #fc4a1a)",
-    info: "linear-gradient(to right, #2193b0, #6dd5ed)"
+    warning: "#facc15",
+    info: "#3b82f6"
   };
 
   Toastify({
     text: message,
-    duration: 4000,
+    duration: 3000,
     gravity: "top",
     position: "center",
     style: {
       background: colors[type],
       color: "white",
-      padding: "10px 20px",
       borderRadius: "8px"
     }
   }).showToast();
 }
 
 // ===============================
-//     PASSWORD VALIDATION
+// PASSWORD VALIDATION
 // ===============================
 function validatePassword(password) {
   const rules = {
@@ -74,7 +72,7 @@ function validatePassword(password) {
   };
 
   const failed = Object.entries(rules)
-    .filter(([_, pass]) => !pass)
+    .filter(([_, valid]) => !valid)
     .map(([rule]) => rule);
 
   return {
@@ -84,70 +82,62 @@ function validatePassword(password) {
 }
 
 // ===============================
-//        SAVE USER PROFILE
+// SAVE USER PROFILE
 // ===============================
 function saveUserProfile(email, name, photo) {
   const profiles = JSON.parse(localStorage.getItem("userProfiles") || "{}");
 
-  profiles[email] = {
-    name,
-    photo
-  };
+  profiles[email] = { name, photo };
 
   localStorage.setItem("userProfiles", JSON.stringify(profiles));
 
-  // Save current session data
+  // Save session
   localStorage.setItem("loggedInUser", email);
   localStorage.setItem("userName", name);
   localStorage.setItem("userPhoto", photo);
 }
 
 // ===============================
-//          SIGNUP
+// SIGNUP (EMAIL/PASSWORD)
 // ===============================
 async function handleSignUp(email, password, name) {
   const check = validatePassword(password);
-
   if (!check.valid) {
-    const reasons = check.failed.join(", ");
-    showToast(`Password is missing: ${reasons}`, "warning");
+    showToast(`Password missing: ${check.failed.join(", ")}`, "warning");
     return;
   }
 
   try {
     await createUserWithEmailAndPassword(auth, email, password);
 
+    // ✅ NO GRAVATAR — leave photo empty or set to ""
+    saveUserProfile(email, name, "");
+
     showToast("Account created successfully!", "success");
     setTimeout(() => (window.location.href = "login.html"), 1200);
 
   } catch (err) {
-    console.error(err);
-    showToast(err.message || "Signup failed", "error");
+    showToast(err.message, "error");
   }
 }
 
 // ===============================
-//          LOGIN
+// LOGIN (EMAIL/PASSWORD)
 // ===============================
 async function handleSignIn(email, password) {
   try {
     await signInWithEmailAndPassword(auth, email, password);
 
-    const profiles = JSON.parse(localStorage.getItem("userProfiles") || "{}");
-
-    const name = profiles[email]?.name || email.split("@")[0];
-
     showToast("Login successful!", "success");
     setTimeout(() => (window.location.href = "dashboard.html"), 900);
 
   } catch (err) {
-    console.error(err);
-    showToast(err.message || "Login failed", "error");
+    showToast(err.message, "error");
   }
 }
 
 // ===============================
-//       GOOGLE SIGN-IN
+// GOOGLE LOGIN / SIGNUP
 // ===============================
 async function handleGoogleSignIn(isSignup = false) {
   try {
@@ -155,35 +145,29 @@ async function handleGoogleSignIn(isSignup = false) {
 
     const email = result.user?.email;
     const name = result.user?.displayName || email.split("@")[0];
-    const photo = result.user?.photoURL || getGravatar(email);
+    const photo = result.user?.photoURL || "";
 
+    // ✅ Save Gmail photo correctly
     saveUserProfile(email, name, photo);
 
-    if (isSignup) {
-      showToast("Account created successfully!", "success");
-      setTimeout(() => (window.location.href = "login.html"), 1200);
-    } else {
-      showToast("Login successful!", "success");
-      setTimeout(() => (window.location.href = "dashboard.html"), 1200);
-    }
+    showToast(isSignup ? "Account created!" : "Login successful!", "success");
+    setTimeout(() => (window.location.href = "dashboard.html"), 1200);
 
   } catch (err) {
-    console.error(err);
-    showToast(err.message || "Google sign-in failed", "error");
+    showToast(err.message, "error");
   }
 }
 
-// Update the event listeners to pass the correct parameter
+// ===============================
+// BUTTON LISTENERS
+// ===============================
 ["googleSignUp", "googleSignIn"].forEach((id) => {
   const btn = document.getElementById(id);
-  if (btn) {
-    // Pass true if it's signup, false if it's signin
-    btn.addEventListener("click", () => handleGoogleSignIn(id === "googleSignUp"));
-  }
+  if (btn) btn.addEventListener("click", () => handleGoogleSignIn(id === "googleSignUp"));
 });
 
 // ===============================
-//      FORM SUBMISSION
+// FORMS
 // ===============================
 const signupForm = document.getElementById("signupForm");
 if (signupForm) {
@@ -209,24 +193,21 @@ if (loginForm) {
 }
 
 // ===============================
-//          LOGOUT
+// LOGOUT
 // ===============================
 window.logout = async () => {
   try {
     await signOut(auth);
-    localStorage.removeItem("loggedInUser");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("userPhoto");
+    localStorage.clear();
     showToast("Logged out successfully", "success");
     setTimeout(() => (window.location.href = "login.html"), 800);
   } catch (err) {
-    console.error(err);
     showToast("Logout failed", "error");
   }
 };
 
 // ===============================
-//      PROTECTED PAGE CHECK
+// PROTECTED PAGE
 // ===============================
 onAuthStateChanged(auth, (user) => {
   if (document.body.dataset.protected === "true" && !user) {
@@ -234,4 +215,3 @@ onAuthStateChanged(auth, (user) => {
     window.location.href = "login.html";
   }
 });
-

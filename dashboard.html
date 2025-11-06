@@ -92,12 +92,12 @@
 </head>
 
 <body class="bg-gray-900 text-white min-h-screen" data-page="dashboard">
-  <!-- Header (desktop layout kept intact) -->
+  <!-- Header -->
   <header class="bg-gray-800 py-3 shadow-md sticky top-0 z-30">
     <div class="max-w-6xl mx-auto px-4 flex items-center justify-between gap-4">
       <a href="dashboard.html" class="text-2xl font-bold text-red-500">🎬 SamFlix</a>
 
-      <!-- DESKTOP NAV - unchanged -->
+      <!-- DESKTOP NAV -->
       <div class="hidden md:flex items-center gap-4">
         <select id="categorySelect" class="px-3 py-2 text-gray-800 rounded">
           <option value="trending">🔥 Trending</option>
@@ -115,16 +115,23 @@
         <button id="searchBtn" class="bg-red-600 px-4 py-2 rounded hover:bg-red-700 transition">Search</button>
       </div>
 
-      <!-- RIGHT: desktop user (kept) -->
+      <!-- RIGHT (DESKTOP): USER AREA -->
       <div class="hidden md:flex items-center gap-4">
         <a href="favorites.html" class="text-gray-300 hover:text-white">❤️ Favorites</a>
+
         <div class="relative">
-          <!-- profile photo for desktop (uses localStorage.userPhoto OR initial fallback) -->
           <div id="desktopUserPhoto" class="user-photo" title="Profile"></div>
         </div>
+
+        <!-- ✅ ADDED DESKTOP LOGOUT BUTTON -->
+        <button onclick="logout()" class="text-gray-300 hover:text-white">
+          🚪 Logout
+        </button>
+        <!-- ✅ END ADDITION -->
+
       </div>
 
-      <!-- MOBILE CONTROLS (only mobile) -->
+      <!-- MOBILE CONTROLS -->
       <div class="md:hidden flex items-center gap-3 relative">
         <button id="searchToggle" class="text-gray-300 hover:text-white" aria-label="Open search">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -133,7 +140,6 @@
           </svg>
         </button>
 
-        <!-- profile photo shown between search icon & menu toggle on mobile -->
         <div id="mobileUserPhoto" class="user-photo"></div>
 
         <button id="mobileMenuBtn" class="text-gray-300 hover:text-white" aria-label="Open menu">
@@ -191,7 +197,7 @@
 
   <div id="backdrop" class="backdrop"></div>
 
-  <!-- Main content (kept simple; desktop layout unchanged) -->
+  <!-- Main content -->
   <main class="max-w-6xl mx-auto mt-6 px-3 ">
     <div class="flex items-center justify-between mb-6 gap-5">
       <h2 id="sectionTitle" class="text-x font-semibold">🔥 Trending Movies</h2>
@@ -200,7 +206,7 @@
     <div id="movieContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
   </main>
 
-  <!-- Modal (details) -->
+  <!-- Modal -->
   <div id="modal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center p-4 z-50">
     <div class="modal-panel bg-gray-800 rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
       <button id="modalClose" class="absolute top-4 right-4 text-gray-400 hover:text-white" aria-label="Close">✕</button>
