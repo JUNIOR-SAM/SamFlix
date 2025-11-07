@@ -103,7 +103,6 @@ function formatCategory(cat = "") {
 }
 
 
-// --- Modal creation if missing (so details always work) ---
 function ensureModal() {
   if (elements.modal && elements.modalContent && elements.modalClose) return;
 
@@ -235,10 +234,7 @@ async function loadShows(category = "trending") {
   }
 }
 
-/**
- * performSearch(query)
- * Single search function used by desktop search, mobile overlay search, and any other caller.
- */
+
 async function performSearch(query = "") {
   query = (query || "").trim();
   if (!query) return;
@@ -291,15 +287,12 @@ function openDetailsForShow(show) {
   openModal();
 }
 
-// --- Wire up UI events safely ---
 function wireUI() {
-  // Desktop search button / Enter on desktop search input
   if (elements.searchBtn && elements.searchInput) {
     elements.searchBtn.addEventListener("click", () => performSearch(elements.searchInput.value));
     elements.searchInput.addEventListener("keyup", (e) => { if (e.key === "Enter") performSearch(elements.searchInput.value); });
   }
 
-  // Mobile overlay search (overlaySearch + mobileSearchBtn)
   if (elements.mobileSearchBtn && elements.overlaySearch) {
     elements.mobileSearchBtn.addEventListener("click", () => performSearch(elements.overlaySearch.value));
     elements.overlaySearch.addEventListener("keyup", (e) => { if (e.key === "Enter") performSearch(elements.overlaySearch.value); });

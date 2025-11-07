@@ -1,6 +1,3 @@
-// ===============================
-//   GLOBAL: ENTER TO SUBMIT
-// ===============================
 document.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
     const signupForm = document.getElementById("signupForm");
@@ -19,9 +16,7 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
-// ===============================
-// FIREBASE CONFIG
-// ===============================
+
 const firebaseConfig = {
   apiKey: "AIzaSyCMI6bSOWfI_CpCeIY3IMx9edB5FhQvcBQ",
   authDomain: "samflix-4f3df.firebaseapp.com",
@@ -35,9 +30,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
-// ===============================
-// SHOW TOAST
-// ===============================
+
 function showToast(message, type = "info") {
   const colors = {
     success: "#10b981",
@@ -48,20 +41,18 @@ function showToast(message, type = "info") {
 
   Toastify({
     text: message,
-    duration: 2000,
+    duration: 2200,
     gravity: "top",
     position: "center",
     style: {
-      background: colors[type],
+      background: colors[type] || colors.info,
       color: "white",
       borderRadius: "8px"
     }
   }).showToast();
 }
 
-// ===============================
-// PASSWORD VALIDATION
-// ===============================
+
 function validatePassword(password) {
   const rules = {
     uppercase: /[A-Z]/.test(password),
@@ -81,25 +72,42 @@ function validatePassword(password) {
   };
 }
 
-// ===============================
-// SAVE USER PROFILE
-// ===============================
-function saveUserProfile(email, name, photo) {
-  const profiles = JSON.parse(localStorage.getItem("userProfiles") || "{}");
 
-  profiles[email] = { name, photo };
-
-  localStorage.setItem("userProfiles", JSON.stringify(profiles));
-
-  // Save session
-  localStorage.setItem("loggedInUser", email);
-  localStorage.setItem("userName", name);
-  localStorage.setItem("userPhoto", photo);
+function getProfiles() {
+  try {
+    return JSON.parse(localStorage.getItem("userProfiles") || "{}");
+  } catch (e) {
+    return {};
+  }
 }
 
-// ===============================
-// SIGNUP (EMAIL/PASSWORD)
-// ===============================
+function setProfiles(obj) {
+  localStorage.setItem("userProfiles", JSON.stringify(obj || {}));
+}
+
+function saveUserProfile(email, name, photo) {
+  const profiles = getProfiles();
+  profiles[email] = { name: name || (email ? email.split("@")[0] : "User"), photo: photo || "" };
+  setProfiles(profiles);
+
+  // Set current session keys used by dashboard
+  localStorage.setItem("loggedInUser", email);
+  localStorage.setItem("userName", profiles[email].name);
+  localStorage.setItem("userPhoto", profiles[email].photo);
+}
+
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    if (!file) return resolve("");
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
+}
+
+
 async function handleSignUp(email, password, name) {
   const check = validatePassword(password);
   if (!check.valid) {
@@ -108,75 +116,92 @@ async function handleSignUp(email, password, name) {
   }
 
   try {
+    // If user provided a file input with id 'signupPhoto' convert to data URL
+    let photoData = "";
+    const photoInput = document.getElementById("signupPhoto");
+    if (photoInput && photoInput.files && photoInput.files[0]) {
+      try {
+        photoData = await fileToDataUrl(photoInput.files[0]);
+      } catch (e) {
+        console.warn("Could not read signup photo file:", e);
+        photoData = "";
+      }
+    }
+
+    // Create user with Firebase Auth
     await createUserWithEmailAndPassword(auth, email, password);
 
-    // ✅ NO GRAVATAR — leave photo empty or set to ""
-    saveUserProfile(email, name, "");
+    // Save profile to localStorage (with uploaded photoData, or empty)
+    saveUserProfile(email, name || (email.split("@")[0]), photoData);
 
-    showToast("Account created successfully!", "success");
-    setTimeout(() => (window.location.href = "login.html"), 1200);
+    showToast("Account created successfully! Redirecting...", "success");
+    setTimeout(() => (window.location.href = "login.html"), 1100);
 
   } catch (err) {
-    showToast(err.message, "error");
+    console.error("Signup error:", err);
+    showToast(err?.message || "Signup failed", "error");
   }
 }
 
-// ===============================
-// LOGIN (EMAIL/PASSWORD)
-// ===============================
+
 async function handleSignIn(email, password) {
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    const result = await signInWithEmailAndPassword(auth, email, password);
 
-    showToast("Login successful!", "success");
-    setTimeout(() => (window.location.href = "dashboard.html"), 900);
+    // Retrieve saved profile (if any) and set session keys
+    const profiles = getProfiles();
+    const profile = profiles[email] || {};
+    const displayName = profile.name || result.user?.displayName || (email.split("@")[0]);
+    const photo = profile.photo || result.user?.photoURL || "";
+
+    localStorage.setItem("loggedInUser", email);
+    localStorage.setItem("userName", displayName);
+    localStorage.setItem("userPhoto", photo);
+
+    showToast("Login successful! Redirecting...", "success");
+    setTimeout(() => (window.location.href = "dashboard.html"), 850);
 
   } catch (err) {
-    showToast(err.message, "error");
+    console.error("Login error:", err);
+    showToast(err?.message || "Login failed", "error");
   }
 }
 
-// ===============================
-// GOOGLE LOGIN / SIGNUP
-// ===============================
+
 async function handleGoogleSignIn(isSignup = false) {
   try {
     const result = await signInWithPopup(auth, googleProvider);
-
     const email = result.user?.email;
-    const name = result.user?.displayName || email.split("@")[0];
+    const name = result.user?.displayName || (email ? email.split("@")[0] : "User");
     const photo = result.user?.photoURL || "";
 
-    // ✅ Save Gmail photo correctly
-    saveUserProfile(email, name, photo);
+    // Save profile (photo is Google profile URL)
+    if (email) saveUserProfile(email, name, photo);
 
-    showToast(isSignup ? "Account created!" : "Login successful!", "success");
-    setTimeout(() => (window.location.href = "dashboard.html"), 1200);
+    showToast(isSignup ? "Account created via Google!" : "Login successful!", "success");
+    setTimeout(() => (window.location.href = "dashboard.html"), 900);
 
   } catch (err) {
-    showToast(err.message, "error");
+    console.error("Google sign-in error:", err);
+    showToast(err?.message || "Google sign-in failed", "error");
   }
 }
 
-// ===============================
-// BUTTON LISTENERS
-// ===============================
+
 ["googleSignUp", "googleSignIn"].forEach((id) => {
   const btn = document.getElementById(id);
   if (btn) btn.addEventListener("click", () => handleGoogleSignIn(id === "googleSignUp"));
 });
 
-// ===============================
-// FORMS
-// ===============================
+
 const signupForm = document.getElementById("signupForm");
 if (signupForm) {
   signupForm.addEventListener("submit", (e) => {
     e.preventDefault();
     handleSignUp(
-      document.getElementById("signupEmail").value.trim(),
-      document.getElementById("signupPassword").value.trim(),
-      document.getElementById("signupName").value.trim()
+      document.getElementById("signupEmail")?.value?.trim() || "",
+      document.getElementById("signupPassword")?.value || "",
+      document.getElementById("signupName")?.value?.trim() || ""
     );
   });
 }
@@ -186,32 +211,40 @@ if (loginForm) {
   loginForm.addEventListener("submit", (e) => {
     e.preventDefault();
     handleSignIn(
-      document.getElementById("email").value.trim(),
-      document.getElementById("password").value.trim()
+      document.getElementById("email")?.value?.trim() || "",
+      document.getElementById("password")?.value || ""
     );
   });
 }
 
-// ===============================
-// LOGOUT
-// ===============================
+
 window.logout = async () => {
   try {
     await signOut(auth);
-    localStorage.clear();
+    // keep userProfiles and favorites, remove only session keys
+    localStorage.removeItem("loggedInUser");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userPhoto");
+
     showToast("Logged out successfully", "success");
-    setTimeout(() => (window.location.href = "login.html"), 800);
+    setTimeout(() => (window.location.href = "login.html"), 700);
   } catch (err) {
+    console.error("Logout error:", err);
     showToast("Logout failed", "error");
   }
 };
 
-// ===============================
-// PROTECTED PAGE
-// ===============================
+
 onAuthStateChanged(auth, (user) => {
-  if (document.body.dataset.protected === "true" && !user) {
-    localStorage.clear();
+  if (document.body?.dataset?.protected === "true" && !user) {
+    localStorage.removeItem("loggedInUser");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userPhoto");
     window.location.href = "login.html";
   }
 });
+
+
+window.handleSignUp = handleSignUp;
+window.handleSignIn = handleSignIn;
+window.handleGoogleSignIn = handleGoogleSignIn;
