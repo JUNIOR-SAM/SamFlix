@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SamFlix — Movie Explorer</title>
+  <link rel="shortcut icon" href="/image/🎬.svg" type="image/x-icon">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <style>
-    /* keep desktop layout unchanged */
     .user-photo {
       width: 36px;
       height: 36px;
@@ -24,7 +24,6 @@
 
     .user-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-    /* mobile dropdown */
     .mobile-dropdown {
       position: absolute;
       right: 0;
@@ -40,7 +39,6 @@
 
     .mobile-dropdown.active { display: block; }
 
-    /* mobile search overlay */
     .search-overlay {
       position: fixed;
       top: -100%;
@@ -54,13 +52,12 @@
 
     .search-overlay.active { top: 0; }
 
-    /* mobile menu (slide) */
     .mobile-menu {
       position: fixed;
       right: -100%;
       top: 0;
       bottom: 0;
-      width: 350px; /* default width; change as you like */
+      width: 350px; 
       background: #111827;
       transition: right .25s ease;
       z-index: 65;
@@ -83,7 +80,6 @@
       pointer-events: auto;
     }
 
-    /* modal styling (scrollable) */
     #modal .modal-panel {
       max-height: 90vh;
       overflow-y: auto;
@@ -92,12 +88,10 @@
 </head>
 
 <body class="bg-gray-900 text-white min-h-screen" data-page="dashboard">
-  <!-- Header -->
   <header class="bg-gray-800 py-3 shadow-md sticky top-0 z-30">
     <div class="max-w-6xl mx-auto px-4 flex items-center justify-between gap-4">
       <a href="dashboard.html" class="text-2xl font-bold text-red-500">🎬 SamFlix</a>
 
-      <!-- DESKTOP NAV -->
       <div class="hidden md:flex items-center gap-4">
         <select id="categorySelect" class="px-3 py-2 text-gray-800 rounded">
           <option value="trending">🔥 Trending</option>
@@ -115,7 +109,6 @@
         <button id="searchBtn" class="bg-red-600 px-4 py-2 rounded hover:bg-red-700 transition">Search</button>
       </div>
 
-      <!-- RIGHT (DESKTOP): USER AREA -->
       <div class="hidden md:flex items-center gap-4">
         <a href="favorites.html" class="text-gray-300 hover:text-white">❤️ Favorites</a>
 
@@ -123,15 +116,10 @@
           <div id="desktopUserPhoto" class="user-photo" title="Profile"></div>
         </div>
 
-        <!-- ✅ ADDED DESKTOP LOGOUT BUTTON -->
-        <button onclick="logout()" class="text-gray-300 hover:text-white">
-          🚪 Logout
-        </button>
-        <!-- ✅ END ADDITION -->
-
+        <!-- ✅ DESKTOP LOGOUT -->
+        <button onclick="logout()" class="text-gray-300 hover:text-white">🚪 Logout</button>
       </div>
 
-      <!-- MOBILE CONTROLS -->
       <div class="md:hidden flex items-center gap-3 relative">
         <button id="searchToggle" class="text-gray-300 hover:text-white" aria-label="Open search">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -142,14 +130,16 @@
 
         <div id="mobileUserPhoto" class="user-photo"></div>
 
-        <button id="mobileMenuBtn" class="text-gray-300 hover:text-white" aria-label="Open menu">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+      <button id="mobileMenuBtn" class="text-gray-300 hover:text-white" aria-label="Open menu">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+  </svg>
+</button>
+
       </div>
     </div>
   </header>
+
 
   <!-- Mobile search overlay -->
   <div id="searchOverlay" class="search-overlay">
@@ -190,7 +180,9 @@
         </select>
 
         <a href="favorites.html" class="block px-3 py-2 text-gray-200 hover:bg-gray-700 rounded">❤️ Favorites</a>
-        <button id="mobileMenuLogout" class="w-full text-left px-3 py-2 text-gray-200 hover:bg-gray-700 rounded">🚪 Logout</button>
+        <button id="mobileMenuLogout" class="w-full text-left px-3 py-2 text-gray-200 hover:bg-gray-700 rounded">
+          🚪 Logout
+        </button>
       </nav>
     </div>
   </div>
@@ -198,7 +190,7 @@
   <div id="backdrop" class="backdrop"></div>
 
   <!-- Main content -->
-  <main class="max-w-6xl mx-auto mt-6 px-3 ">
+  <main class="max-w-6xl mx-auto mt-6 px-3">
     <div class="flex items-center justify-between mb-6 gap-5">
       <h2 id="sectionTitle" class="text-x font-semibold">🔥 Trending Movies</h2>
       <p id="userGreeting" class="text-gray-300 text-sm"></p>
@@ -209,7 +201,11 @@
   <!-- Modal -->
   <div id="modal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center p-4 z-50">
     <div class="modal-panel bg-gray-800 rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
-      <button id="modalClose" class="absolute top-4 right-4 text-gray-400 hover:text-white" aria-label="Close">✕</button>
+
+      <!-- ✅ THIS IS THE X BUTTON YOU ASKED ABOUT -->
+      <button id="modalClose" class="absolute top-4 right-4 text-gray-400 hover:text-white"
+        aria-label="Close">✕</button>
+
       <div id="modalContent"></div>
     </div>
   </div>
@@ -218,21 +214,39 @@
     © 2025 SamFlix | Built by <span class="text-red-500 font-semibold">Samuel</span> 🍿
   </footer>
 
-  <!-- scripts: Toastify -->
   <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-
-  <!-- load your app logic (unchanged script.js you gave me) -->
   <script src="script.js"></script>
 
-  <!-- Small wiring for profile photo, search overlay, mobile menu, modal close, and syncing selects -->
   <script>
+    // ✅ UNIVERSAL LOGOUT FUNCTION (Desktop + Mobile)
+    function logout() {
+      localStorage.removeItem("loggedInUser");
+      localStorage.removeItem("userName");
+      localStorage.removeItem("userPhoto");
+
+      Toastify({
+        text: "Logged out successfully",
+        duration: 2000,
+        gravity: "top",
+        position: "center",
+        style: { background: "#ef4444", borderRadius: "8px" }
+      }).showToast();
+
+      setTimeout(() => {
+        window.location.href = "login.html";
+      }, 900);
+    }
+
+    document.getElementById("mobileMenuLogout").addEventListener("click", logout);
+  </script>
+
+  <script>
+    /* your long script untouched */
     (function () {
-      // localStorage keys used by your auth logic:
       const userEmail = localStorage.getItem('loggedInUser') || '';
       const userName = localStorage.getItem('userName') || (userEmail ? userEmail.split('@')[0] : 'User');
-      const userPhoto = localStorage.getItem('userPhoto') || null; // <-- user requested key
+      const userPhoto = localStorage.getItem('userPhoto') || null;
 
-      // helper: set a user-photo element (image or initial)
       function setUserPhoto(el, photoUrl, name) {
         if (!el) return;
         el.innerHTML = '';
@@ -241,7 +255,6 @@
           img.src = photoUrl;
           img.alt = name || 'Profile';
           img.className = 'block w-full h-full object-cover';
-          // if image fails to load, fallback to initial
           img.onerror = () => {
             el.innerHTML = (name && name.charAt(0).toUpperCase()) || '?';
           };
@@ -251,39 +264,33 @@
         }
       }
 
-      // populate photo on desktop, mobile, and slide menu
       setUserPhoto(document.getElementById('desktopUserPhoto'), userPhoto, userName);
       setUserPhoto(document.getElementById('mobileUserPhoto'), userPhoto, userName);
       setUserPhoto(document.getElementById('mobileMenuPhoto'), userPhoto, userName);
 
-      // populate slide menu name & email
       const setTextIf = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt || ''; };
       setTextIf('mobileMenuName', userName);
       setTextIf('mobileMenuEmail', userEmail);
 
-      // greeting
       const greetEl = document.getElementById('userGreeting');
       if (greetEl) {
         const hr = new Date().getHours();
         const greet = hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';
-        // small styling inline without changing layout
         greetEl.innerHTML = `<span class="text-gray-300">${greet},</span> <span class="text-red-500 font-semibold">${userName}</span>`;
       }
 
-      // mobile menu toggle
       const mobileMenuBtn = document.getElementById('mobileMenuBtn');
       const mobileMenu = document.getElementById('mobileMenu');
       const closeMobileMenu = document.getElementById('closeMobileMenu');
       const backdrop = document.getElementById('backdrop');
 
-      function openMenu() { mobileMenu.classList.add('active'); backdrop.classList.add('active'); mobileMenu.setAttribute('aria-hidden','false'); }
-      function closeMenuFn() { mobileMenu.classList.remove('active'); backdrop.classList.remove('active'); mobileMenu.setAttribute('aria-hidden','true'); }
+      function openMenu() { mobileMenu.classList.add('active'); backdrop.classList.add('active'); }
+      function closeMenuFn() { mobileMenu.classList.remove('active'); backdrop.classList.remove('active'); }
 
       mobileMenuBtn?.addEventListener('click', openMenu);
       closeMobileMenu?.addEventListener('click', closeMenuFn);
       backdrop?.addEventListener('click', closeMenuFn);
 
-      // wire mobile category select to desktop loadShows (if available)
       const mobileCategorySelect = document.getElementById('mobileCategorySelect');
       const desktopCategorySelect = document.getElementById('categorySelect');
       mobileCategorySelect?.addEventListener('change', (e) => {
@@ -296,7 +303,6 @@
         if (mobileCategorySelect) mobileCategorySelect.value = e.target.value;
       });
 
-      // Search overlay wiring (mobile)
       const searchToggle = document.getElementById('searchToggle');
       const searchOverlay = document.getElementById('searchOverlay');
       const closeSearch = document.getElementById('closeSearch');
@@ -311,25 +317,18 @@
       searchToggle?.addEventListener('click', openSearchOverlay);
       closeSearch?.addEventListener('click', closeSearchOverlay);
 
-      // performSearch: prefer window.handleSearch (your script.js provides it). fallback -> click desktopSearchBtn
       function performSearchFrom(q) {
         if (!q) return;
-        // update UI title if present
         const sectionTitle = document.getElementById('sectionTitle');
         if (sectionTitle) sectionTitle.textContent = `🔍 Results for "${q}"`;
 
-        // If your global handler exists use it
         if (typeof window.handleSearch === 'function') {
           try {
             window.handleSearch({ query: q, category: 'trending' });
             return;
-          } catch (err) {
-            console.warn('window.handleSearch threw:', err);
-            // fallback below
-          }
+          } catch {}
         }
 
-        // Fallback: set desktop input value and trigger desktopSearchBtn click (script.js listens)
         if (desktopSearchInput) desktopSearchInput.value = q;
         if (desktopSearchBtn) desktopSearchBtn.click();
       }
@@ -337,12 +336,6 @@
       overlaySearch?.addEventListener('keyup', (e) => { if (e.key === 'Enter') { performSearchFrom(overlaySearch.value.trim()); closeSearchOverlay(); overlaySearch.value = ''; } });
       mobileSearchBtn?.addEventListener('click', () => { performSearchFrom(overlaySearch.value.trim()); closeSearchOverlay(); overlaySearch.value = ''; });
 
-      // keep desktop search button working (in case script.js overwrote)
-      document.getElementById('searchBtn')?.addEventListener('click', (e) => {
-        // if script.js already handles it, this will still call it; no-op here
-      });
-
-      // Modal close wiring
       const modal = document.getElementById('modal');
       const modalClose = document.getElementById('modalClose');
       modalClose?.addEventListener('click', () => {
@@ -351,7 +344,6 @@
       });
       modal?.addEventListener('click', (ev) => { if (ev.target === modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); } });
 
-      // Expose helper for other scripts to open modal with HTML content
       window.openMovieModal = function (html) {
         const content = document.getElementById('modalContent');
         if (content) content.innerHTML = html || '';
@@ -360,7 +352,6 @@
       };
 
     })();
-    
   </script>
 </body>
 </html>

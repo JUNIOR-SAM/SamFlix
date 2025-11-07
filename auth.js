@@ -48,7 +48,7 @@ function showToast(message, type = "info") {
 
   Toastify({
     text: message,
-    duration: 3000,
+    duration: 2000,
     gravity: "top",
     position: "center",
     style: {

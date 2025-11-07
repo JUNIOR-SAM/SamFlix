@@ -6,6 +6,7 @@
   <title>SamFlix — Favorites</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="bootstrap.css">
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 </head>
 <body class="bg-gray-900 text-white min-h-screen">
   <header class="bg-gray-800 py-4 shadow-md">
@@ -24,56 +25,86 @@
     © 2025 SamFlix | Built by <span class="text-red-500 font-semibold">Samuel</span> 🍿
   </footer>
 
-  <script>
-    const favoritesContainer = document.getElementById("favoritesContainer");
-    let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+ <script>
+  const favoritesContainer = document.getElementById("favoritesContainer");
+  let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
 
-    function renderFavorites() {
-      favoritesContainer.innerHTML = "";
-      if (favorites.length === 0) {
-        favoritesContainer.innerHTML = `<p class="text-center text-gray-400 col-span-full">No favorites added yet.</p>`;
-        return;
-      }
+  // ✅ Toast function
+  function toast(text, type = "info") {
+    if (typeof Toastify === "function") {
+      Toastify({
+        text,
+        duration: 2000,
+        gravity: "top",
+        position: "center",
+        style: {
+          background:
+            type === "success"
+              ? "#10b981"
+              : type === "error"
+              ? "#ef4444"
+              : "#3b82f6",
+          borderRadius: "10px"
+        }
+      }).showToast();
+    } else {
+      alert(text);
+    }
+  }
 
-      favorites.forEach(show => {
-        const card = document.createElement("div");
-        card.className = "bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:scale-105 transition cursor-pointer";
-        card.innerHTML = `
-          <img src="${show.image || 'https://via.placeholder.com/300x420?text=No+Image'}" alt="${escapeHtml(show.name)}" class="w-full h-64 object-cover">
-          <div class="p-3">
-            <h3 class="text-lg font-semibold mb-1">${escapeHtml(show.name)}</h3>
-            <p class="text-sm text-gray-400">${(show.genres && show.genres.join(", ")) || ''}</p>
-            <div class="mt-2 flex= gap-2">
-             <div class="d-flex justify-content-end col-12"> <button class="remove-btn bg-red-600 px-2 py-2 col-6 rounded text-sm">Remove</button> </div>
+  function renderFavorites() {
+    favoritesContainer.innerHTML = "";
+    if (favorites.length === 0) {
+      favoritesContainer.innerHTML = `<p class="text-center text-gray-400 col-span-full">No favorites added yet.</p>`;
+      return;
+    }
+
+    favorites.forEach(show => {
+      const card = document.createElement("div");
+      card.className = "bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:scale-105 transition cursor-pointer";
+      card.innerHTML = `
+        <img src="${show.image || 'https://via.placeholder.com/300x420?text=No+Image'}" alt="${escapeHtml(show.name)}" class="w-full h-64 object-cover">
+        <div class="p-3">
+          <h3 class="text-lg font-semibold mb-1">${escapeHtml(show.name)}</h3>
+          <p class="text-sm text-gray-400">${(show.genres && show.genres.join(", ")) || ''}</p>
+          <div class="mt-2 flex= gap-2">
+            <div class="d-flex justify-content-end col-12">
+              <button class="remove-btn bg-red-600 px-2 py-2 col-6 rounded text-sm">Remove</button>
             </div>
           </div>
-        `;
-        card.querySelector(".remove-btn").addEventListener("click", () => {
-          favorites = favorites.filter(f => f.id !== show.id);
-          localStorage.setItem("favorites", JSON.stringify(favorites));
-          alert(`Removed "${show.name}" from Favorites ❌`);
-          renderFavorites();
-        });
-        favoritesContainer.appendChild(card);
-      });
-    }
+        </div>
+      `;
 
-    function escapeHtml(text = "") {
-      return String(text)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-    }
-
-    renderFavorites();
-
-    // keep favorites in sync with other tab/page changes
-    window.addEventListener("storage", (e) => {
-      if (e.key === "favorites") {
-        favorites = JSON.parse(e.newValue) || [];
+      // ✅ Replace alert with toast
+      card.querySelector(".remove-btn").addEventListener("click", () => {
+        favorites = favorites.filter(f => f.id !== show.id);
+        localStorage.setItem("favorites", JSON.stringify(favorites));
+        toast(`Removed "${show.name}" from Favorites ❌`, "error");
         renderFavorites();
-      }
+      });
+
+      favoritesContainer.appendChild(card);
     });
-  </script>
+  }
+
+  function escapeHtml(text = "") {
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  renderFavorites();
+
+  // sync updates
+  window.addEventListener("storage", (e) => {
+    if (e.key === "favorites") {
+      favorites = JSON.parse(e.newValue) || [];
+      renderFavorites();
+    }
+  });
+</script>
+
 </body>
 </html>

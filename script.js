@@ -60,11 +60,12 @@ function toast(text, type = "info") {
   if (typeof Toastify === "function") {
     Toastify({
       text,
-      duration: 3000,
+      duration: 2000,
       gravity: "top",
-      position: "right",
+      position: "center",
       style: {
-        background: type === "success" ? "#10b981" : (type === "error" ? "#ef4444" : "#3b82f6")
+        background: type === "success" ? "#10b981" : type === "error" ? "#ef4444" : "#3b82f6",
+        borderRadius: "10px",
       }
     }).showToast();
   } else {
